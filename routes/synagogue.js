@@ -1,7 +1,7 @@
-var express = require("express");
-var router = express.Router();
+var express     = require("express");
+var router      = express.Router();
 
-var services = require("../services/synagogue");
+var services    = require("../services/synagogue");
 
 router.get("/:id" , async function(req, res){
     // Getting a synagogue by Mongodb id

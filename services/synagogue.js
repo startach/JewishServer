@@ -28,4 +28,4 @@ module.exports.getSynagogueById     = getSynagogueById;
 module.exports.getSynagoguesByQuery = getSynagoguesByQuery;
 module.exports.updateSynagogueById  = updateSynagogueById;
 module.exports.deleteSynagoguebyId  = deleteSynagoguebyId;
-module.exports.createSynagogue = createSynagogue;
+module.exports.createSynagogue      = createSynagogue;
