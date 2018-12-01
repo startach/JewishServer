@@ -3,9 +3,9 @@ var Schema = mongoose.Schema;
 
 var ExternalsSchema = new Schema({
     mikve: Boolean,
-    parking:Boolean,
-    disabled_access:Boolean,
-    shtiblach:Boolean,
+    parking: Boolean,
+    disabled_access: Boolean,
+    shtiblach: Boolean,
 });
 
 var MinyanSchema = new Schema({
@@ -21,7 +21,7 @@ var LessonSchema = MinyanSchema;
 var SynagogueSchema = new Schema({
     name: String,
     address: String,
-    location: fields.PointField(blank=True),
+    location: {},
     nosach: String,
     phone_number: String,
     externals: ExternalsSchema,
@@ -31,4 +31,4 @@ var SynagogueSchema = new Schema({
     comments: String
 });
 
-module.exports = new mongoose.model('Synagogue', SynagogueSchema);
+module.exports = mongoose.model('Synagogue', SynagogueSchema);
