@@ -1,8 +1,12 @@
 var express             = require('express');
+var morgan              = require('morgan');
 var mongoose            = require('mongoose');
 var synagogueRouter     = require('./routes/synagogue');
 
 var app = express();
+
+// Mount the logger
+app.use(morgan('dev'));
 
 // Automatically parses JSON bodies of requests
 // We won't use bodyParser, Express4.X^
