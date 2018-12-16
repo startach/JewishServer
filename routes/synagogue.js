@@ -1,21 +1,26 @@
-var express     = require("express");
-var router      = express.Router();
+var express         = require("express");
+var router          = express.Router();
+var services        = require("../services/synagogue");
+var id_validation   = require("../middleaware/validate").id_validation;
 
-var services    = require("../services/synagogue");
-
-router.get("/:id" , async function(req, res){
+router.get("/:id", id_validation, async function(req, res){
     // Getting a synagogue by Mongodb id
     try {
         const result = await services.getSynagogueById(req.query.id);
-        return res.status(200).json(result);
+        return res.status(200).json({data: result});
     } catch(e) {
-        return res.status(500).json(e);
+        return res.status(500).json({error: e});
     }
 });
 
-router.get("/location" , function(req, res){
-    // Getting synagogues in a specific location
-    // Can and will be used with Radius or other params 
+router.get("/search" , async function(req, res){
+    // Getting synagogues by filters
+    try {
+        const result = await services.getSynagoguesByQuery(req.body.filter);
+        return res.status(200).json({result: result});
+    } catch(e) {
+        return res.status(500).json({error: e});
+    }
 });
 
 router.post("/" , async function(req, res){
@@ -24,27 +29,27 @@ router.post("/" , async function(req, res){
         const result = await services.createSynagogue(req.body.synagogue);
         return res.status(200).json({id: result._id});
     } catch(e) {
-        return res.status(500).json(e);
+        return res.status(500).json({error :e});
     }
 });
 
-router.put("/:id" , async function(req, res){
+router.put("/:id" , id_validation, async function(req, res){
     // Updating a synagogue
     //{id: ID, update: {PARAMS}}
     try {
         const result = await services.updateSynagogueById(req.body.id, req.body.update);
         return res.status(200).json(result);
     } catch(e) {
-        return res.status(500).json(e);
+        return res.status(500).json({error :e});
     }
 });
 
-router.delete("/:id" , async function(req, res){
+router.delete("/:id" , id_validation, async function(req, res){
     // Deleting
     try {
         return await services.deleteSynagoguebyId(req.query.id);
     } catch(e) {
-        return res.status(500).json(e);
+        return res.status(500).json({error :e});
     }
 });
 

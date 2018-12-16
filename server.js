@@ -1,6 +1,6 @@
-var express         = require('express');
-var mongoose        = require('mongoose');
-var synagogueRouter = require('./routes/synagogue');
+var express             = require('express');
+var mongoose            = require('mongoose');
+var synagogueRouter     = require('./routes/synagogue');
 
 var app = express();
 

@@ -21,7 +21,7 @@ var LessonSchema = MinyanSchema;
 var SynagogueSchema = new Schema({
     name: String,
     address: String,
-    location: {},
+    location: [],
     nosach: String,
     phone_number: String,
     externals: ExternalsSchema,

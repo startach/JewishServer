@@ -8,7 +8,7 @@ function getSynagogueById(id) {
 
 function getSynagoguesByQuery(query) {
     // Get a synagogue by query
-    return;
+    return Synagogue.find(query).exec();
 };
 
 function createSynagogue(synagogue) {
