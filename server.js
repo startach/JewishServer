@@ -21,7 +21,7 @@ app.use('/synagogue' , synagogueRouter);
 app.listen(8080, function () {
     // Assuming a local mongodb instance with the db
     // jewishTest is a test db
-    mongoose.connect('mongodb://localhost/jewishTest' , { useNewUrlParser: true })
+    mongoose.connect('mongodb://startach:gG123456@ds235022.mlab.com:35022/jewish_world' , { useNewUrlParser: true })
         .then(() => console.log('mongodb: connection succesful'))
         .catch((err) => console.error(err));
     console.log('express: listening on 3000');
