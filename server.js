@@ -18,7 +18,7 @@ app.use(express.json());
 app.use('/synagogue' , synagogueRouter);
 
 // Server init
-app.listen(3000, function () {
+app.listen(8080, function () {
     // Assuming a local mongodb instance with the db
     // jewishTest is a test db
     mongoose.connect('mongodb://localhost/jewishTest' , { useNewUrlParser: true })
