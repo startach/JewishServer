@@ -8,7 +8,36 @@ function getSynagogueById(id) {
 
 function getSynagoguesByQuery(query) {
     // Get a synagogue by query
-    return Synagogue.find(query).exec();
+    searchQuery = {};
+
+    location = query.location ? query.location : null;
+    searchParams = query.searchParams ? query.searchParams : null;
+
+    if(location && searchParams) return;
+
+    if(!searchParams){
+        searchQuery = searchParams;
+    }
+
+    if(!location) {
+        searchQuery.location = {
+            "$near" : {
+                "$geometry" : {
+                    "type" : "Point",
+                    "coordinates" : [
+                        parseFloat(location.lon),
+                        parseFloat(location.lat)
+                    ]
+                },
+                "$maxDistance" : parseInt(location.max_radius) * 1000,
+                "$minDistance" : parseint(location.min_radius) * 1000
+            }
+        };
+    }
+
+
+
+    return Synagogue.find(searchQuery).exec();
 };
 
 function createSynagogue(synagogue) {

@@ -1,6 +1,8 @@
 var Synagogue = require("../models/synagogue");
 var services = require("../services/synagogue");
 
+const testMongoID = "5c2d1f718c3fe8000917b9ae"; // Test Object Id on GCP!!!!!!!!!
+
 var data = [
     {
         name: '1',
