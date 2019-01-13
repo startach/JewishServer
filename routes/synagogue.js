@@ -12,8 +12,8 @@ router.get("/:id", id_validation, async function(req, res){
         return res.status(500).json({error: e});
     }
 });
-
-router.post("/search" , search_validation, async function(req, res){
+// FIXME: search_validation
+router.post("/search" , /*search_validation,*/ async function(req, res){
     // Getting synagogues by Synagogue fields in location by radius
     // {searchParams: params , location: {lat, lon, min_radius, max_radius}}
     try {
