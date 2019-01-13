@@ -7,17 +7,19 @@ function getSynagogueById(id) {
 };
 
 function getSynagoguesByQuery(query) {
+    // FIXME: HACK HACK HACK
     // Get a synagogue by query
     searchQuery = {};
 
-    location = query.location ? query.location : null;
-    searchParams = query.searchParams ? query.searchParams : null;
+    location = query;
+    
+    //searchParams = query.searchParams ? query.searchParams : null;
 
-    if(location && searchParams) return;
+    //if(location && searchParams) return;
 
-    if(!searchParams){
-        searchQuery = searchParams;
-    }
+    //if(!searchParams){
+        //searchQuery = searchParams;
+    //}
 
     if(!location) {
         searchQuery.location = {
