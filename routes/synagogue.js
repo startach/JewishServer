@@ -13,7 +13,7 @@ router.get("/:id", id_validation, async function(req, res){
     }
 });
 
-router.get("/search" , search_validation, async function(req, res){
+router.post("/search" , search_validation, async function(req, res){
     // Getting synagogues by Synagogue fields in location by radius
     // {searchParams: params , location: {lat, lon, min_radius, max_radius}}
     try {
