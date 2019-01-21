@@ -19,12 +19,12 @@ app.use(cors({ origin: '*' }))
 app.use('/synagogue', synagogueRouter);
 
 // Server init
-app.listen(8080, function () {
+app.listen(process.env.PORT, function () {
   // Assuming a local mongodb instance with the db
   // jewishTest is a test db
   mongoose.connect('mongodb://startach:gG123456@ds235022.mlab.com:35022/jewish_world', { useNewUrlParser: true })
     .then(() => console.log('mongodb: connection succesful'))
     .catch((err) => console.error(err));
-  console.log('express: listening on 3000');
+  console.log('express: listening on ' + process.env.PORT);
 });
 
