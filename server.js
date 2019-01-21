@@ -1,3 +1,4 @@
+require('@google-cloud/debug-agent').start();
 var express = require('express');
 var morgan = require('morgan');
 var mongoose = require('mongoose');
