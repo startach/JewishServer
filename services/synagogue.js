@@ -21,7 +21,7 @@ function getSynagoguesByQuery(query) {
         //searchQuery = searchParams;
     //}
 
-    if(!location) {
+    if(location) {
         searchQuery.location = {
             "$near" : {
                 "$geometry" : {
