@@ -20,25 +20,27 @@ function getSynagoguesByQuery(query) {
     //if(!searchParams){
         //searchQuery = searchParams;
     //}
+    const coordinates = [parseFloat(location.lon), parseFloat(location.lat)];
+    console.log(`Coordinates ${coordinates}`);
+    const maxRadius = parseInt(location.max_radius)
+    console.log(`maxRadius ${maxRadius}`);
+    const minRadius = parseInt(location.min_radius)
+    console.log(`minRadius ${minRadius}`);
 
     if(location) {
         searchQuery.location = {
             "$near" : {
                 "$geometry" : {
                     "type" : "Point",
-                    "coordinates" : [
-                        parseFloat(location.lon),
-                        parseFloat(location.lat)
-                    ]
+                    "coordinates" : coordinates
                 },
-                "$maxDistance" : parseInt(location.max_radius) * 1000,
-                "$minDistance" : parseint(location.min_radius) * 1000
+                "$maxDistance" : maxRadius * 1000,
+                "$minDistance" : minRadius * 1000
             }
         };
     }
-
-
-
+    
+    console.log(`searchQuery ${searchQuery}`);
     return Synagogue.find(searchQuery).exec();
 };
 
