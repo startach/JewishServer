@@ -1,29 +1,27 @@
 {
-  "name": "jewishserver",
+  "name": "@risingstack/rest-api-typescript",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
-  "dependencies": {
-    "@google-cloud/debug-agent": "^3.0.1",
-    "body-parser": "^1.18.3",
-    "cors": "^2.8.5",
-    "express": "^4.16.4",
-    "express-validator": "^5.3.0",
-    "mongoose": "^5.3.12",
-    "morgan": "^1.9.1"
-  },
-  "devDependencies": {},
+  "main": "index.js",
   "scripts": {
-    "start": "node server.js"
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "nodemon dist",
+    "tsc": "tsc"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/startach/JewishServer.git"
-  },
+  "keywords": [],
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/startach/JewishServer/issues"
+  "dependencies": {
+    "express": "^4.17.1",
+    "mongodb": "3.1.2",
+    "nodemon": "^1.19.1"
   },
-  "homepage": "https://github.com/startach/JewishServer#readme"
+  "devDependencies": {
+    "@types/express": "^4.17.0",
+    "@types/mongodb": "3.1.2",
+    "@types/node": "7.0.22",
+    "tsc": "^1.20150623.0",
+    "typescript": "^3.5.2"
+  }
 }
