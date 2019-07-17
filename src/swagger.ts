@@ -1,7 +1,7 @@
 interface JsonObject { [key: string]: any; }
 
 const swaggerDocument: JsonObject = {
-    "swagger": "2.0",
+    "swagger": "2.0" ,
     "title": "Synagogue API Documentation",
     "info": {
         "version": "1.0.0",
