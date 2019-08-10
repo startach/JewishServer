@@ -17,6 +17,11 @@ export class SynagogueDB {
         return this.convertDBModelToSynagogue(model);
     }
 
+    public getLessonsAndSynagoguesByCity = async (city: string) => {
+        const model = await this.synagoguesDB.findOne({ "_id": ObjectID.createFromHexString(city) });
+        return this.convertDBModelToSynagogue(model);
+    }
+
     public createSynagogue = async (synagogue: SynagogueModel) => {
         const model = this.convertSynagogueToDBModel(synagogue);
         return await this.synagoguesDB.insertOne(model);

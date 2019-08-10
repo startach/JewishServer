@@ -1,0 +1,13 @@
+{
+	"definitions": {},
+	"info": {
+		"license": {
+			"name": "ISC"
+		},
+		"title": "@risingstack/rest-api-typescript",
+		"version": "1.0.0"
+	},
+	"paths": {},
+	"swagger": "2.0",
+	"securityDefinitions": {}
+}
