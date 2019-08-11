@@ -73,7 +73,7 @@ export class SynagogueDB {
                 }
             };
 
-        if (Object.keys(innerQuery).some(key => !!innerQuery[key]))
+        if (Object.keys(innerQuery).some(key => !innerQuery[key]))
             return { success: false, message: "No valid query received" };
 
         try {
