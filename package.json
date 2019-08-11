@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "start": "nodemon dist"
+    "start": "nodemon dist",
+    "webhook": "node webhook/index.js"
   },
   "keywords": [],
   "author": "",
