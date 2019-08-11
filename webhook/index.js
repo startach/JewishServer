@@ -1,6 +1,6 @@
-import * as bodyParser from 'body-parser';
-import * as express from 'express';
-import "reflect-metadata";
+const bodyParser = require('body-parser');
+const express = require('express');
+require("reflect-metadata");
 
 const port = 8080
 const router = express.Router();
@@ -8,6 +8,7 @@ const router = express.Router();
 router.post("/", async (req, res) => {
     console.log("you did push");
     console.log(req);
+    return res.status(200).json({ data: "success" });
 });
 
 const app = express();
