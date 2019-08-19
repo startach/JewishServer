@@ -1,21 +1,14 @@
 import { ObjectId } from "bson";
+import { Location } from "./Location";
+import { Minyan } from "./Minyan";
 
-export interface SynagogueDBModel {
+export interface Synagogue {
     _id: ObjectId;
     name: string;
     address: string;
-    location: {
-        type: string;
-        coordinates: number[];
-    };
+    location: Location;
     nosach: string;
-    minyans: {
-        minyan: string;
-        days: number[];
-        startTime: number;
-        endTime?: number;
-        lastVerified: string;
-    }[];
+    minyans: Minyan[];
     externals: {
         mikve: boolean;
         parking: boolean;
@@ -25,5 +18,5 @@ export interface SynagogueDBModel {
     phone_number: string[];
     comments: string;
     image: any;
-    lessons: any[];
+    lessons: ObjectId[];
 }

@@ -2,7 +2,7 @@ export interface SearchQuery {
     name?: string,
     address?: string,
     days?: number[],
-    hours?: string[],
+    hours?: number[],
     mikve?: boolean,
     parking?: boolean,
     disabled_access?: boolean,

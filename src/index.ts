@@ -1,7 +1,7 @@
 import * as bodyParser from 'body-parser';
 import * as express from 'express';
-import synagogueRouter from "./routes/synagogueRoute";
-import generalRouter from "./routes/generalRoute";
+import { SynagoguesRouter } from "./routes/SynagoguesRouter";
+import { LessonsRouter } from "./routes/LessonsRouter";
 import "reflect-metadata";
 import * as swagger from "swagger-express-ts";
 
@@ -29,8 +29,8 @@ app.use(swagger.express(
   }
 ));
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use('/synagogue', synagogueRouter);
-app.use('/general', generalRouter);
+app.use('/synagogue', new SynagoguesRouter().router);
+app.use('/lesson', new LessonsRouter().router);
 
 
 app.listen(port, () => {
