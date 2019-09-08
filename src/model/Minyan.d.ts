@@ -1,7 +1,8 @@
 export interface Minyan {
     minyan: string;
+    timeType: string; // exact or relative
     days: number[];
-    startTime: number;
-    endTime?: number;
+    time: string;
+    before: string; // dawn...
     lastVerified: string;
 }

@@ -2,10 +2,25 @@ import { SearchQuery } from "../model/SearchQuery";
 import { InnerQuery } from "../model/InnerQuery";
 import { Synagogue } from "../model/Synagogue";
 import { MongoDB } from "./MongoDB";
+import { ObjectID } from "bson";
 
 export class SynagoguesDB extends MongoDB<Synagogue> {
     constructor() {
         super("synagogues");
+    }
+
+    public like = async (synagogue_id: string, user_id: string) => {
+        return await this.DB.updateOne(
+            {_id: ObjectID.createFromHexString(synagogue_id), likes: {$ne: ObjectID.createFromHexString(user_id)}},
+            {$inc: {likes_count: 1}, $push: { likes: ObjectID.createFromHexString(user_id)}}
+        );
+    }
+
+    public unlike = async (synagogue_id: string, user_id: string) => {
+        return await this.DB.updateOne(
+            {_id: ObjectID.createFromHexString(synagogue_id), likes: ObjectID.createFromHexString(user_id)},
+            {$inc: {likes_count: -1}, $pull: { likes: ObjectID.createFromHexString(user_id)}}
+        );
     }
 
     public search = async (query: SearchQuery) => {
