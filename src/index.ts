@@ -20,11 +20,11 @@ const ExtractJwt = require('passport-jwt').ExtractJwt;
 
 const port = process.env.PORT || 80
 // for dev testing
-const FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID || '2935448396471284';
-const FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET || 'f1d0564d7e08123bcb5059a4902796d9';
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '619926981615-lt15dp89dd2k94gfhp9sn3uh99v04e1n.apps.googleusercontent.com';
-const GOOGLE_CLIENT_SECRET = process.env || 'HMUxEImtSSuD-nTxBvGCZV8U';
-const JWT_SECRET = process.env.JWT_SECRET || "secret";
+const FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID;
+const FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const app = express();
 
