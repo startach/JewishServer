@@ -11,6 +11,10 @@ export class MongoDB<T> {
         this.initializeDB(collentionName);
     }
 
+    public getAll = async () => {
+        return await this.DB.find({}).toArray();
+    }
+
     public getById = async (id: string) => {
         return await this.DB.findOne({ "_id": ObjectID.createFromHexString(id) });
     }

@@ -4,7 +4,6 @@ import { Minyan } from "./Minyan";
 import { Like } from "./Like";
 
 export interface Synagogue {
-    //_id: ObjectId;
     name: string;
     address: string;
     location: Location;
@@ -14,10 +13,10 @@ export interface Synagogue {
         mikve: boolean;
         parking: boolean;
         disabled_access: boolean;
-        shtiblach: boolean;
     };
+    shtiblach: boolean;
     phone_number: string[];
-    comments: string;
+    comments: Comment[];
     image: any;
     lessons: ObjectId[];
     donation_link: string;

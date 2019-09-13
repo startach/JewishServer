@@ -5,9 +5,13 @@ import { LessonsRouter } from "./routes/LessonsRouter";
 import { AuthRouter } from './routes/AuthRouter';
 import { SplashRouter } from './routes/SplashRouter';
 import { UsersRouter } from './routes/UsersRouter';
+import { SearchRouter } from './routes/SearchRouter';
 import * as passport from 'passport';
 import "reflect-metadata";
 import * as swagger from "swagger-express-ts";
+import { updateMinyan } from './update_minyan';
+import * as i18n from 'i18n';
+// const i18n = require("i18n");
 
 const FacebookTokenStrategy = require('passport-facebook-token');
 const GoogleTokenStrategy = require('passport-google-token').Strategy;
@@ -23,6 +27,16 @@ const GOOGLE_CLIENT_SECRET = process.env || 'HMUxEImtSSuD-nTxBvGCZV8U';
 const JWT_SECRET = process.env.JWT_SECRET || "secret";
 
 const app = express();
+
+//config for internationalization
+import * as path from "path";
+console.log()
+i18n.configure({
+  locales:['en', 'iw'],
+  directory: path.resolve(process.cwd(), 'src/locales')
+});
+
+app.set('i18n', i18n);
 
 app.use(passport.initialize());
 
@@ -88,7 +102,9 @@ app.use('/auth', new AuthRouter().router);
 app.use('/synagogue', new SynagoguesRouter().router);
 app.use('/lesson', new LessonsRouter().router);
 app.use('/users', new UsersRouter().router);
+app.use('/search', new SearchRouter().router);
 
+//updateMinyan();
 
 app.listen(port, () => {
   return console.log(`server is listening on ${ port }`)

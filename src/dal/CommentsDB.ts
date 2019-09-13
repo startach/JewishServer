@@ -7,7 +7,9 @@ export class CommentsDB extends MongoDB<Comment> {
         super("comments")
     }
 
-    public findByThreadId = async (id: string) => {
-        return await this.DB.find({synagogue_id: id}).toArray();
+    public findByThreadId = async (prop: string, id: string) => {
+        let query = {};
+        query[prop] = id;
+        return await this.DB.find(query).toArray();
     }
 }

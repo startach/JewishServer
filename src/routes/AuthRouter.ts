@@ -15,7 +15,6 @@ export class AuthRouter extends BaseRouter<User> {
         super(new UsersDB());
         this.router.post("/facebook/token", passport.authenticate('facebook-token', {session: false}), this.facebookTokenAuth);
         this.router.post("/google/token", passport.authenticate('google-token', {session: false}), this.googleTokenAuth);
-        this.router.get("/fb", this.facebookLogin);
     }
 
     private facebookTokenAuth = async (req, res) => {
@@ -44,10 +43,6 @@ export class AuthRouter extends BaseRouter<User> {
         const token = jwt.sign(JSON.stringify(payload), this.JWT_SECRET);
         res.send({token: token, user: user});
     }
-
-    private facebookLogin = (req: Request, res: Response) => {
-        res.sendFile("C:/Users/Karim/Desktop/test.html")
-    };
 
     private googleTokenAuth = async (req, res) => {
         let user = {

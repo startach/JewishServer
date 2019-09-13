@@ -1,36 +1,73 @@
-import { MongoDB } from "./MongoDB";
+import { SearchQuery } from "../model/SearchQuery";
+import { InnerQuery } from "../model/InnerQuery";
 import { Lesson } from "../model/Lesson";
-import getCoordByCity from "city-to-coords";
+import { MongoDB } from "./MongoDB";
+import { ObjectID } from "bson";
 
 export class LessonsDB extends MongoDB<Lesson> {
     constructor() {
         super("lessons")
     }
 
-    public getLessonsByCity = async (city: string) => {
-        const coords = await getCoordByCity(city);
-        const now = new Date();
+    public like = async (lesson_id: string, user_id: string) => {
+        return await this.DB.updateOne(
+            {_id: ObjectID.createFromHexString(lesson_id), likes: {$ne: ObjectID.createFromHexString(user_id)}},
+            {$inc: {likes_count: 1}, $push: { likes: ObjectID.createFromHexString(user_id)}}
+        );
+    }
 
-        const innerQuery = {
-            days: { $all: now.getDay() + 1 },
-            location: {
+    public unlike = async (lesson_id: string, user_id: string) => {
+        return await this.DB.updateOne(
+            {_id: ObjectID.createFromHexString(lesson_id), likes: ObjectID.createFromHexString(user_id)},
+            {$inc: {likes_count: -1}, $pull: { likes: ObjectID.createFromHexString(user_id)}}
+        );
+    }
+
+    public search = async (query: SearchQuery) => {
+        const innerQuery: InnerQuery = {};
+
+        if (!!query.name)
+            innerQuery.name = { "$regex": ".*" + query.name + ".*" };
+        if (!!query.address)
+            innerQuery.address = { "$regex": ".*" + query.address + ".*" };
+        if (!!query.days)
+            innerQuery["minyans.days"] = { "$all": query.days };
+        if (!!query.hours) {
+            if (query.hours.length > 0)
+                innerQuery["minyans.startTime"] = { "$gte": query.hours[0] };
+            if (query.hours.length > 1)
+                innerQuery["minyans.endTime"] = { "$lte": query.hours[1] };
+        }
+        if (!!query.mikve)
+            innerQuery["externals.mikve"] = query.mikve;
+        if (!!query.parking)
+            innerQuery["externals.parking"] = query.parking;
+        if (!!query.disabled_access)
+            innerQuery["externals.disabled_access"] = query.disabled_access;
+        if (!!query.shtiblach)
+            innerQuery["externals.shtiblach"] = query.shtiblach;
+
+        if (!!query.lat && !!query.lon && !!query.min_radius && !!query.max_radius)
+            innerQuery.location = {
                 $near: {
                     $geometry: {
                         type: "Point",
                         coordinates: [
-                            coords.lng,
-                            coords.lat
+                            query.lon,
+                            query.lat
                         ]
                     },
-                    $maxDistance: 0,
-                    $minDistance: 3000,
+                    $maxDistance: Math.round(query.max_radius * 1000),
+                    $minDistance: Math.round(query.min_radius * 1000),
                 }
-            }
-        };
+            };
 
-        const models = await this.DB
+        if (Object.keys(innerQuery).some(key => !innerQuery[key]))
+            return { success: false, message: "No valid query received" };
+
+        return await this.DB
             .find(innerQuery)
+            .limit(20)
             .toArray();
-        return models.sort((a, b) => a.likes.length - b.likes.length).slice(4);
     }
 }

@@ -8,6 +8,8 @@ import { Location } from "../model/Location";
 import { Minyan } from "../model/Minyan";
 import { Comment } from "../model/Comment";
 import * as passport from "passport";
+const KosherZmanim = require('kosher-zmanim').default;
+const tzlookup = require("tz-lookup");
 
 export class SynagoguesRouter extends BaseRouter<Synagogue>{
     public SynagogueDB = (<SynagoguesDB>this.DB);
@@ -17,6 +19,7 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
         super(new SynagoguesDB());
         this.CommentsDB = new CommentsDB();
         this.UsersDB = new UsersDB();
+        this.router.get('/nosach', this.viewNosach);
         this.router.post('/add', passport.authenticate('jwt', { session: false }), this.addSynagogue);
         this.router.get('/view', passport.authenticate('jwt', { session: false }), this.viewSynagogue);
         this.router.put('/update', passport.authenticate('jwt', { session: false }), this.updateSynagogue);
@@ -27,7 +30,24 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
         this.router.post('/unlike', passport.authenticate('jwt', { session: false }), this.unlike);
         this.router.post('/favorite', passport.authenticate('jwt', { session: false }), this.favorite);
         this.router.post('/unfavorite', passport.authenticate('jwt', { session: false }), this.unfavorite);
-        this.router.post('/search', passport.authenticate('jwt', { session: false }), this.search);
+    }
+
+    private viewNosach = async (req: Request, res: Response) => {
+        let i18n = req.app.get('i18n');
+        let locale = req.query.lang || 'en';
+        i18n.setLocale(locale);
+        
+        const NOSACH = [
+            { "ashkenazi": i18n.__('ashkenazi') },
+            { "sefard": i18n.__('sefard') },
+            { "edot_hamizrah": i18n.__('edot_hamizrah') },
+            { "ar\"i": i18n.__('ar\"i') },
+            { "chabad": i18n.__('chabad') },
+            { "temani": i18n.__('temani') }
+        ];
+
+        res.status(200);
+        res.send({nosach: NOSACH});
     }
 
     private addSynagogue = async (req: Request, res: Response) => {
@@ -41,17 +61,13 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
         if(req.query.location == null){
             errors.push({message: "Missing location"})
         }
-        if(req.query.minyans == null){
-            errors.push({message: "Missing minyans"})
-        }
         if(req.query.notes != null && req.query.notes.length > 1000){
-            console.log(req.query.notes.length)
             errors.push({message: "Notes cannot exceed 1000 characters"})
         }
         
         let externals: object;
         let location: Location;
-        let minyans: Minyan;
+        let minyans: Minyan[];
 
         if(req.query.externals != null){
             try {
@@ -61,23 +77,31 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
             }
         }
 
-        if(req.query.minyans != null){
-            try {
-                minyans = JSON.parse(req.query.minyans);
-            } catch (e) {
-                errors.push({message: "Minyans must be JSON"})
-            }
-        }
-        
         try {
             location = JSON.parse(req.query.location);
         } catch (e) {
             errors.push({message: "Location must be JSON"})
         }
+
+        if(!req.query.shtiblach){
+            if(req.query.minyans == null){
+                errors.push({message: "Missing minyans"})
+            }
+            if(req.query.minyans != null){
+                try {
+                    minyans = JSON.parse(req.query.minyans);
+                    minyans.forEach(async (minyan) => { await this.setMinyanTime(minyan, location); })
+                } catch (e) {
+                    errors.push({message: "Minyans must be JSON"});
+                }
+            }
+        }
+
         if(errors.length > 0){
             res.status(400);
             return res.send(errors)
         }
+
         let synagogue = {
             name: req.query.name,
             address: req.query.address,
@@ -85,6 +109,7 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
             nosach: req.query.nosach,
             minyans: minyans,
             externals: externals,
+            shtiblach: req.query.shtiblach,
             phone_number: req.query.phone_number,
             comments: req.query.comments,
             image: req.query.image,
@@ -95,7 +120,7 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
         // @ts-ignore
         let newSynagogue = await this.SynagogueDB.create(synagogue);
         res.status(200);
-        res.send({id: newSynagogue.ops[0]._id, message: "Synagogue added successfully"})
+        res.send({id: newSynagogue.ops[0]._id, message: "Synagogue added successfully"});
 
     };
 
@@ -104,16 +129,22 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
         let comments: object;
         try {
             synagogue = await this.SynagogueDB.getById(req.query.id);
-            comments = await this.CommentsDB.findByThreadId(req.query.id);
+            comments = await this.CommentsDB.findByThreadId("synagogue_id", req.query.id);
             console.log(comments);
             synagogue.comments = comments
             if(synagogue == null){
                 res.status(400);
                 res.send({message: "Synagogue not found"})
-            }   
+            }
+            synagogue.minyans.forEach(async (minyan) => { 
+                if(minyan.timeType == 'relative'){
+                    await this.setMinyanTime(minyan, synagogue.location);
+                }
+             })
         } catch (e) {
+            console.log(e)
             res.status(400);
-            res.send({message: "Bad request"})
+            return res.send({message: "Bad request"})
         }
         
         res.status(200);
@@ -143,7 +174,7 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
         
         let externals: object;
         let location: Location;
-        let minyans: Minyan;
+        let minyans: Minyan[];
         
         if(req.query.externals != null){
             try {
@@ -162,10 +193,17 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
         if(req.query.minyans != null){
             try {
                 minyans = JSON.parse(req.query.minyans);
+                minyans.forEach(async (minyan) => { await this.setMinyanTime(minyan, location); })
             } catch (e) {
                 errors.push({message: "Minyans must be JSON"})
             }
         }
+
+        minyans.forEach(async (minyan) => {
+            if(minyan.timeType == 'relative'){
+                await this.setMinyanTime(minyan, location);
+            }
+         })
         
         let newSynagogue = {
             name: req.query.name,
@@ -185,6 +223,7 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
         try {
             synagogue = await this.SynagogueDB.updateById({id: req.query.id, updateParams: {$set: newSynagogue}});
         } catch (e) {
+            console.log(e)
             errors.push({message: 'Bad request'})
         }
 
@@ -233,8 +272,14 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
         }
         // @ts-ignore
         req.query.user_id = req.user.id;
+        let comment;
+        try {
+            comment = await this.CommentsDB.create(req.query);   
+        } catch (e) {
+            res.status(400);
+            res.send({message: "Bad request"})
+        }
 
-        let comment = await this.CommentsDB.create(req.query);
         res.status(200);
         res.send(comment.ops[0]);
     }
@@ -260,7 +305,7 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
         }
         
         res.status(200);
-        res.send(comment);
+        res.send({message: "Comment deleted successfully"});
     }
 
     private like = async (req: Request, res: Response) => {
@@ -319,8 +364,44 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
         res.send({message: "Unfavorited successfully"});
     }
 
+    private setMinyanTime = async (minyan: Minyan, location: Location) => {
+        if(minyan.timeType == 'exact'){
+            // @ts-ignore
+            minyan.timeString = minyan.time;
+            // @ts-ignore
+            let t = minyan.time.split(':');
+            minyan.time = (+t[0]) * 60 * 60 + (+t[1]) * 60;
+        } else if(minyan.timeType == 'relative'){
+            let timezone = tzlookup(location.coordinates[1], location.coordinates[0])
+            const options = {
+                date: new Date(),
+                timeZoneId: timezone,
+                locationName: timezone, //for simplicity, location is timezone
+                latitude: location.coordinates[1],
+                longitude: location.coordinates[0]
+            }
+            const kosherZmanim = new KosherZmanim(options);
+            const zmanim = kosherZmanim.getZmanimJson();
+            if (minyan.sun_position == 'sunrise') {
+                let sunriseMinyanTime = new Date(new Date(zmanim.BasicZmanim.Sunrise).getTime() + minyan.offset * 60000);
+                let hours = new Date(sunriseMinyanTime.toLocaleString("en-US", {timeZone: timezone})).getHours();
+                let minutes = new Date(sunriseMinyanTime.toLocaleString("en-US", {timeZone: timezone})).getMinutes();
+                minyan.time = hours * 60 * 60 + minutes * 60;
+                minyan.timeString = new Date(minyan.time * 1000).toISOString().substr(11, 5);
+                minyan.lastVerified = new Date();
+            } else if(minyan.sun_position == 'sunset'){
+                let sunsetMinyanTime = new Date(new Date(zmanim.BasicZmanim.Sunset).getTime() + minyan.offset * 60000);
+                let hours = new Date(sunsetMinyanTime.toLocaleString("en-US", {timeZone: timezone})).getHours();
+                let minutes = new Date(sunsetMinyanTime.toLocaleString("en-US", {timeZone: timezone})).getMinutes();
+                minyan.time = hours * 60 * 60 + minutes * 60;
+                minyan.timeString = new Date(minyan.time * 1000).toISOString().substr(11, 5);
+                minyan.lastVerified = new Date();
+            }
+        }
+    }
 
-    private search = async (req: Request, res: Response) => {
-        await this.TryRequest(res, this.SynagogueDB.search, req.body);
-    };
+    private getMinyanTime = async (minyan: Minyan) => {
+        // @ts-ignore
+        minyan.time = new Date(minyan.time * 1000).toISOString().substr(11, 5);
+    }
 }

@@ -12,4 +12,5 @@ export interface Lesson {
     notes: string;
     likes: ObjectId[];
     comments: Comment[];
+    audience: string;
 }
