@@ -268,9 +268,15 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
     }
 
     private like = async (req: Request, res: Response) => {
+        let message: string;
         try {
             // @ts-ignore
-            await this.SynagogueDB.like(req.body.synagogue_id, req.user.id);
+            let q = await this.SynagogueDB.like(req.body.synagogue_id, req.user.id);
+            if(q.result.nModified == 1){
+                message = "Liked successfully";
+            } else {
+                message = "Already liked by this user.";
+            }
         } catch (e) {
             console.log(e)
             res.status(400);
@@ -278,13 +284,19 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
         }
 
         res.status(200);
-        res.send({message: "Liked successfully"});
+        res.send({message: message});
     }
 
     private unlike = async (req: Request, res: Response) => {
+        let message: string;
         try {
             // @ts-ignore
-            await this.SynagogueDB.unlike(req.body.synagogue_id, req.user.id);
+            let q = await this.SynagogueDB.unlike(req.body.synagogue_id, req.user.id);
+            if(q.result.nModified == 1){
+                message = "Unliked successfully";
+            } else {
+                message = "Not liked by this user.";
+            }
         } catch (e) {
             console.log(e)
             res.status(400);
@@ -292,13 +304,19 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
         }
 
         res.status(200);
-        res.send({message: "Unliked successfully"});
+        res.send({message: message});
     }
 
     private favorite = async (req: Request, res: Response) => {
+        let message: string;
         try {
             // @ts-ignore
-            await this.UsersDB.favorite(req.body.synagogue_id, req.user.id, 'synagogue');
+            let q = await this.UsersDB.favorite(req.body.synagogue_id, req.user.id, 'synagogue');
+            if(q.result.nModified == 1){
+                message = "Favorited successfully";
+            } else {
+                message = "Already favorited by this user.";
+            }
         } catch (e) {
             console.log(e)
             res.status(400);
@@ -306,13 +324,19 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
         }
 
         res.status(200);
-        res.send({message: "Favorited successfully"});
+        res.send({message: message});
     }
 
     private unfavorite = async (req: Request, res: Response) => {
+        let message: string;
         try {
             // @ts-ignore
-            await this.UsersDB.unfavorite(req.body.synagogue_id, req.user.id, 'synagogue');
+            let q = await this.UsersDB.unfavorite(req.body.synagogue_id, req.user.id, 'synagogue');
+            if(q.result.nModified == 1){
+                message = "Unfavorited successfully";
+            } else {
+                message = "Not favorited by this user.";
+            }
         } catch (e) {
             console.log(e)
             res.status(400);
@@ -320,7 +344,7 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
         }
 
         res.status(200);
-        res.send({message: "Unfavorited successfully"});
+        res.send({message: message});
     }
 
     private setMinyanTime = async (minyan: Minyan, location: Location) => {
