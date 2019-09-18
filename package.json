@@ -15,7 +15,9 @@
   "dependencies": {
     "body-parser": "^1.19.0",
     "city-to-coords": "^1.1.0",
+    "dotenv": "^8.1.0",
     "express": "^4.17.1",
+    "faker": "^4.1.0",
     "i18n": "^0.8.3",
     "jsonwebtoken": "^8.5.1",
     "kosher-zmanim": "^0.2.4",
@@ -30,7 +32,7 @@
     "passport-jwt": "^4.0.0",
     "reflect-metadata": "^0.1.13",
     "swagger-express-ts": "^1.0.1",
-    "swagger-ui-express": "^4.0.6",
+    "swagger-ui-express": "^4.1.1",
     "tz-lookup": "^6.1.24"
   },
   "devDependencies": {

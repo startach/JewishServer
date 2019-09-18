@@ -16,35 +16,26 @@ export class UsersRouter extends BaseRouter<User> {
 
     private updateCity = async (req: Request, res: Response) => {
         let errors = [];
-        if(req.query.city == null){
-            errors.push({message: "Missing city"})
+        if(req.body.city == null){
+            errors.push({message: "Missing city"});
         }
-        if(req.query.location == null){
-            errors.push({message: "Missing location"});
-        }
-        let location = {
-            type: null,
-            coordinate: null
-        };
-        try {
-            location = JSON.parse(req.query.location);
-        } catch (e) {
-            console.log(e)
-            errors.push({message: "Location must be JSON"})
-        }
-        if(location.type == null){
-            errors.push({message: "Missing location type"});
-        }
-        if(location.coordinate == null){
-            errors.push({message: "Missing location coordinate"});
+        
+        if(req.body.coordinates == null){
+            errors.push({message: "Missing coordinates"});
         }
 
         if(errors.length > 0){
             res.status(400);
             return res.send(errors)
         }
+
+        let location = {
+            type: "Point",
+            coordinates: req.body.coordinates
+        };
+
         // @ts-ignore
-        await this.UserDB.updateCity(req.id, { cityName: req.query.city, location: location });
+        await this.UserDB.updateCity(req.id, { cityName: req.body.city, location: location });
         res.status(200);
         res.send({message: "City updated successfully"});
     }

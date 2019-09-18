@@ -3,6 +3,7 @@ import * as express from 'express';
 import { SynagoguesRouter } from "./routes/SynagoguesRouter";
 import { LessonsRouter } from "./routes/LessonsRouter";
 import { AuthRouter } from './routes/AuthRouter';
+import { HomeRouter } from './routes/HomeRouter';
 import { SplashRouter } from './routes/SplashRouter';
 import { UsersRouter } from './routes/UsersRouter';
 import { SearchRouter } from './routes/SearchRouter';
@@ -11,26 +12,25 @@ import "reflect-metadata";
 import * as swagger from "swagger-express-ts";
 import { updateMinyan } from './update_minyan';
 import * as i18n from 'i18n';
-// const i18n = require("i18n");
+import * as path from "path";
 
 const FacebookTokenStrategy = require('passport-facebook-token');
 const GoogleTokenStrategy = require('passport-google-token').Strategy;
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
+require('dotenv').config();
 
-const port = process.env.PORT || 80
-// for dev testing
+const port = process.env.PORT || 80;
+
 const FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID;
 const FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const GOOGLE_CLIENT_SECRET = process.env;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const JWT_SECRET = process.env.JWT_SECRET;
 
 const app = express();
 
 //config for internationalization
-import * as path from "path";
-console.log()
 i18n.configure({
   locales:['en', 'iw'],
   directory: path.resolve(process.cwd(), 'src/locales')
@@ -75,15 +75,21 @@ passport.use(new GoogleTokenStrategy({
   clientSecret: GOOGLE_CLIENT_SECRET
 },
 function(accessToken, refreshToken, profile, done) {
-  done(null,profile);
+  done(null, profile);
 }
 ));
 
-app.use(function(err, req, res, next) {
-  if(err){
-    console.log(err)
-  }  
-})
+app.use((err, req, res, next) => {
+  //catch incorrect json err
+  // @ts-ignore
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+      console.error(err);
+      return res.sendStatus(400);
+  }
+
+  next();
+});
+
 passport.use(new JwtStrategy({
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
   secretOrKey   : JWT_SECRET,
@@ -98,13 +104,14 @@ function (req, jwtPayload, done) {
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/', new SplashRouter().router);
+app.use('/home', new HomeRouter().router);
 app.use('/auth', new AuthRouter().router);
 app.use('/synagogue', new SynagoguesRouter().router);
 app.use('/lesson', new LessonsRouter().router);
 app.use('/users', new UsersRouter().router);
 app.use('/search', new SearchRouter().router);
 
-//updateMinyan();
+setTimeout(() => { updateMinyan(); }, 3000)
 
 app.listen(port, () => {
   return console.log(`server is listening on ${ port }`)

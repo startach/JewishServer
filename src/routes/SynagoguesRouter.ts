@@ -1,12 +1,12 @@
 import { SynagoguesDB } from "../dal/SynagoguesDB";
 import { CommentsDB } from "../dal/CommentsDB";
+import { LessonsDB } from "../dal/LessonsDB";
 import { UsersDB } from "../dal/UsersDB";
 import { BaseRouter } from "./BaseRouter";
 import { Response, Request } from "express";
 import { Synagogue } from "../model/Synagogue";
 import { Location } from "../model/Location";
 import { Minyan } from "../model/Minyan";
-import { Comment } from "../model/Comment";
 import * as passport from "passport";
 const KosherZmanim = require('kosher-zmanim').default;
 const tzlookup = require("tz-lookup");
@@ -15,10 +15,12 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
     public SynagogueDB = (<SynagoguesDB>this.DB);
     public CommentsDB: CommentsDB;
     public UsersDB: UsersDB;
+    public LessonsDB: LessonsDB;
     constructor() {
         super(new SynagoguesDB());
         this.CommentsDB = new CommentsDB();
         this.UsersDB = new UsersDB();
+        this.LessonsDB = new LessonsDB();
         this.router.get('/nosach', this.viewNosach);
         this.router.post('/add', passport.authenticate('jwt', { session: false }), this.addSynagogue);
         this.router.get('/view', passport.authenticate('jwt', { session: false }), this.viewSynagogue);
@@ -52,48 +54,25 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
 
     private addSynagogue = async (req: Request, res: Response) => {
         let errors = [];
-        if(req.query.name == null){
+        if(req.body.name == null){
             errors.push({message: "Missing name"})
         }
-        if(req.query.address == null){
+        if(req.body.address == null){
             errors.push({message: "Missing address"})
         }
-        if(req.query.location == null){
+        if(req.body.location == null){
             errors.push({message: "Missing location"})
         }
-        if(req.query.notes != null && req.query.notes.length > 1000){
+        if(req.body.notes != null && req.body.notes.length > 1000){
             errors.push({message: "Notes cannot exceed 1000 characters"})
         }
-        
-        let externals: object;
-        let location: Location;
-        let minyans: Minyan[];
 
-        if(req.query.externals != null){
-            try {
-                externals = JSON.parse(req.query.externals) 
-            } catch (e) {
-                errors.push({message: "Externals must be JSON"})
-            }
-        }
-
-        try {
-            location = JSON.parse(req.query.location);
-        } catch (e) {
-            errors.push({message: "Location must be JSON"})
-        }
-
-        if(!req.query.shtiblach){
-            if(req.query.minyans == null){
+        if(!req.body.shtiblach){
+            if(req.body.minyans == null){
                 errors.push({message: "Missing minyans"})
             }
-            if(req.query.minyans != null){
-                try {
-                    minyans = JSON.parse(req.query.minyans);
-                    minyans.forEach(async (minyan) => { await this.setMinyanTime(minyan, location); })
-                } catch (e) {
-                    errors.push({message: "Minyans must be JSON"});
-                }
+            if(req.body.minyans != null){
+                req.body.minyans.forEach(async (minyan) => { await this.setMinyanTime(minyan, req.body.location); })
             }
         }
 
@@ -103,19 +82,19 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
         }
 
         let synagogue = {
-            name: req.query.name,
-            address: req.query.address,
-            location: location,
-            nosach: req.query.nosach,
-            minyans: minyans,
-            externals: externals,
-            shtiblach: req.query.shtiblach,
-            phone_number: req.query.phone_number,
-            comments: req.query.comments,
-            image: req.query.image,
-            lessons: req.query.lessons,
-            donation_link: req.query.donation_link,
-            notes: req.query.notes,
+            name: req.body.name,
+            address: req.body.address,
+            location: req.body.location,
+            nosach: req.body.nosach,
+            minyans: req.body.minyans,
+            externals: req.body.externals,
+            shtiblach: req.body.shtiblach,
+            phone_number: req.body.phone_number,
+            comments: req.body.comments,
+            image: req.body.image,
+            lessons: req.body.lessons,
+            donation_link: req.body.donation_link,
+            notes: req.body.notes,
         };
         // @ts-ignore
         let newSynagogue = await this.SynagogueDB.create(synagogue);
@@ -127,11 +106,14 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
     private viewSynagogue = async (req: Request, res: Response) => {
         let synagogue;
         let comments: object;
+        let lessons: object;
         try {
             synagogue = await this.SynagogueDB.getById(req.query.id);
             comments = await this.CommentsDB.findByThreadId("synagogue_id", req.query.id);
+            lessons = await this.LessonsDB.getById(req.query.id);
             console.log(comments);
-            synagogue.comments = comments
+            synagogue.comments = comments;
+            synagogue.lessons = lessons;
             if(synagogue == null){
                 res.status(400);
                 res.send({message: "Synagogue not found"})
@@ -153,75 +135,52 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
 
     private updateSynagogue = async (req: Request, res: Response) => {
         let errors = [];
-        if(req.query.id == null){
+        if(req.body.id == null){
             errors.push({message: "Missing Id"})
         }
-        if(req.query.name == null){
+        if(req.body.name == null){
             errors.push({message: "Missing name"})
         }
-        if(req.query.address == null){
+        if(req.body.address == null){
             errors.push({message: "Missing address"})
         }
-        if(req.query.location == null){
+        if(req.body.location == null){
             errors.push({message: "Missing location"})
         }
-        if(req.query.minyans == null){
+        if(req.body.minyans == null){
             errors.push({message: "Missing minyans"})
         }
-        if(req.query.notes != null && req.query.notes.length > 1000){
+        if(req.body.notes != null && req.body.notes.length > 1000){
             errors.push({message: "Notes cannot exceed 1000 characters"})
         }
         
-        let externals: object;
-        let location: Location;
-        let minyans: Minyan[];
         
-        if(req.query.externals != null){
-            try {
-                externals = JSON.parse(req.query.externals) 
-            } catch (e) {
-                errors.push({message: "Externals must be JSON"})
+        if(!req.body.shtiblach){
+            if(req.body.minyans == null){
+                errors.push({message: "Missing minyans"})
+            }
+            if(req.body.minyans != null){
+                req.body.minyans.forEach(async (minyan) => { await this.setMinyanTime(minyan, req.body.location); })
             }
         }
-        
-        try {
-            location = JSON.parse(req.query.location);
-        } catch (e) {
-            errors.push({message: "Location must be JSON"})
-        }
-        
-        if(req.query.minyans != null){
-            try {
-                minyans = JSON.parse(req.query.minyans);
-                minyans.forEach(async (minyan) => { await this.setMinyanTime(minyan, location); })
-            } catch (e) {
-                errors.push({message: "Minyans must be JSON"})
-            }
-        }
-
-        minyans.forEach(async (minyan) => {
-            if(minyan.timeType == 'relative'){
-                await this.setMinyanTime(minyan, location);
-            }
-         })
         
         let newSynagogue = {
-            name: req.query.name,
-            address: req.query.address,
-            location: location,
-            nosach: req.query.nosach,
-            minyans: minyans,
-            externals: externals,
-            phone_number: req.query.phone_number,
-            comments: req.query.comments,
-            image: req.query.image,
-            lessons: req.query.lessons,
-            donation_link: req.query.donation_link
+            name: req.body.name,
+            address: req.body.address,
+            location: req.body.location,
+            nosach: req.body.nosach,
+            minyans: req.body.minyans,
+            externals: req.body.externals,
+            phone_number: req.body.phone_number,
+            comments: req.body.comments,
+            image: req.body.image,
+            lessons: req.body.lessons,
+            donation_link: req.body.donation_link
         };
 
         let synagogue;
         try {
-            synagogue = await this.SynagogueDB.updateById({id: req.query.id, updateParams: {$set: newSynagogue}});
+            synagogue = await this.SynagogueDB.updateById({id: req.body.id, updateParams: {$set: newSynagogue}});
         } catch (e) {
             console.log(e)
             errors.push({message: 'Bad request'})
@@ -253,16 +212,16 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
 
     private comment = async (req: Request, res: Response) => {
         let errors = [];
-        if(req.query.synagogue_id == null){
+        if(req.body.synagogue_id == null){
             errors.push({message: "Missing synagogue id"})
         }
-        if(req.query.comment_body == null){
+        if(req.body.comment_body == null){
             errors.push({message: "Missing comment body"})
         }
-        if(req.query.date == null){
+        if(req.body.date == null){
             errors.push({message: "Missing Date"})
         }
-        if(req.query.comment_body != null && req.query.comment_body.length > 1000){
+        if(req.body.comment_body != null && req.body.comment_body.length > 1000){
             errors.push({message: "Cannot exceed 1000 characters"})
         }
 
@@ -271,10 +230,10 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
             return res.send(errors)
         }
         // @ts-ignore
-        req.query.user_id = req.user.id;
+        req.body.user_id = req.user.id;
         let comment;
         try {
-            comment = await this.CommentsDB.create(req.query);   
+            comment = await this.CommentsDB.create(req.body);   
         } catch (e) {
             res.status(400);
             res.send({message: "Bad request"})
@@ -311,7 +270,7 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
     private like = async (req: Request, res: Response) => {
         try {
             // @ts-ignore
-            await this.SynagogueDB.like(req.query.synagogue_id, req.user.id);
+            await this.SynagogueDB.like(req.body.synagogue_id, req.user.id);
         } catch (e) {
             console.log(e)
             res.status(400);
@@ -325,7 +284,7 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
     private unlike = async (req: Request, res: Response) => {
         try {
             // @ts-ignore
-            await this.SynagogueDB.unlike(req.query.synagogue_id, req.user.id);
+            await this.SynagogueDB.unlike(req.body.synagogue_id, req.user.id);
         } catch (e) {
             console.log(e)
             res.status(400);
@@ -339,7 +298,7 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
     private favorite = async (req: Request, res: Response) => {
         try {
             // @ts-ignore
-            await this.UsersDB.favorite(req.query.synagogue_id, req.user.id, 'synagogue');
+            await this.UsersDB.favorite(req.body.synagogue_id, req.user.id, 'synagogue');
         } catch (e) {
             console.log(e)
             res.status(400);
@@ -353,7 +312,7 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
     private unfavorite = async (req: Request, res: Response) => {
         try {
             // @ts-ignore
-            await this.UsersDB.unfavorite(req.query.synagogue_id, req.user.id, 'synagogue');
+            await this.UsersDB.unfavorite(req.body.synagogue_id, req.user.id, 'synagogue');
         } catch (e) {
             console.log(e)
             res.status(400);
@@ -400,8 +359,4 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
         }
     }
 
-    private getMinyanTime = async (minyan: Minyan) => {
-        // @ts-ignore
-        minyan.time = new Date(minyan.time * 1000).toISOString().substr(11, 5);
-    }
 }

@@ -4,24 +4,29 @@ import { UsersDB } from "../dal/UsersDB";
 import { Response, Request, response } from "express";
 import { Lesson } from "../model/Lesson";
 import { LessonsDB } from "../dal/LessonsDB";
+import { SynagoguesDB } from "../dal/SynagoguesDB";
 import { Comment } from "../model/Comment";
 import { Location } from "../model/Location";
 import { SpeakerDB } from "../dal/SpeakerDB";
 import * as passport from "passport";
+import { ObjectID } from "bson";
 
 export class LessonsRouter extends BaseRouter<Lesson>{
     public LessonDB = (<LessonsDB>this.DB);
     public CommentsDB: CommentsDB;
     public SpeakerDB: SpeakerDB;
     public UsersDB: UsersDB;
+    public SynagoguesDB: SynagoguesDB;
     constructor() {
         super(new LessonsDB());
         this.UsersDB = new UsersDB();
         this.CommentsDB = new CommentsDB();
         this.SpeakerDB = new SpeakerDB();
+        this.SynagoguesDB = new SynagoguesDB();
+        this.router.get('/audience',passport.authenticate('jwt', { session: false }), this.getAudience);
         this.router.post('/add',passport.authenticate('jwt', { session: false }), this.addLesson);
         this.router.get('/view', passport.authenticate('jwt', { session: false }), this.viewLesson);
-        this.router.get('/speaker', passport.authenticate('jwt', { session: false }), this.getSpeakers);
+        this.router.get('/speakers', passport.authenticate('jwt', { session: false }), this.getSpeakers);
         this.router.put('/update', passport.authenticate('jwt', { session: false }), this.updateLesson);
         this.router.delete('/delete', passport.authenticate('jwt', { session: false }), this.deleteLesson);
         this.router.get('/viewSpeaker',passport.authenticate('jwt', { session: false }), this.viewSpeaker);
@@ -33,34 +38,40 @@ export class LessonsRouter extends BaseRouter<Lesson>{
         this.router.post('/unfavorite', passport.authenticate('jwt', { session: false }), this.unfavorite);
         //this.router.post('/search', passport.authenticate('jwt', { session: false }), this.search);
 }
+
+private getAudience = async (req: Request, res: Response) => {
+    let i18n = req.app.get('i18n');
+    let locale = req.query.lang || 'en';
+    i18n.setLocale(locale);
+    
+    res.status(200);
+    res.send({
+        men: i18n.__('men'),
+        women: i18n.__('women'),
+        men_women: i18n.__('men_women')
+    });
+}
+
 private addLesson = async (req: Request, res: Response) => {
     let errors = [];
-    if(req.query.speaker == null){
-        errors.push({message: "Missing speaker"})
+    
+    if(req.body.speakerId == null || ObjectID.isValid(req.body.speakerId) == false){
+        errors.push({message: "Missing or incorrect speaker Id"})
     }
-    if(req.query.lessonSubject == null){
+    if(req.body.lessonSubject == null){
         errors.push({message: "Missing address"})
     }
-    if(req.query.location == null){
+    if(req.body.location == null){
         errors.push({message: "Missing location"})
     }
-    if(req.query.days == null){
-        errors.push({message: "Missing Times and Dates"})
+
+    if(req.body.date == null){
+        if(req.body.days == null){
+            errors.push({message: "Missing Times and Dates"})
+        }
     }
 
-    let location: Location;
-    let days;
-    try {
-        location = JSON.parse(req.query.location);
-    } catch (e) {
-        errors.push({message: "Location must be JSON"})
-    }
-    try {
-        days = JSON.parse(req.query.days);
-    } catch (e) {
-        errors.push({message: "Days must be valid array"})
-    }
-    if(req.query.notes != null && req.query.notes.length > 100){
+    if(req.body.notes != null && req.body.notes.length > 100){
         errors.push({message: "Description cannot exceed 100 characters"})
     }
     if(errors.length > 0){
@@ -68,21 +79,44 @@ private addLesson = async (req: Request, res: Response) => {
         return res.send(errors)
     }
 
-    req.query.speaker = {
-            name: req.query.speaker,
-            avatar: req.query.avatar
+    let time;
+    let timeString;
+    let days = [];
+    if(req.body.time){
+        let t = req.body.time.split(':');
+        time = (+t[0]) * 60 * 60 + (+t[1]) * 60;
+    } else if(req.body.date){
+        let d = req.body.date.replace('Z','');
+        time = (+new Date(d).getHours()) * 60 * 60 + (+new Date(d).getMinutes()) * 60;
     }
-    let speaker = await this.SpeakerDB.create(req.query.speaker);
+    if(req.body.date != null && req.body.days == null){
+        days.push(new Date(req.body.date.replace('Z','')).getDay());
+    } else {
+        days = req.body.days;
+    }
+
+    timeString = new Date(time * 1000).toISOString().substr(11, 5);
+
+    req.body.speaker = {
+            name: req.body.speaker,
+            avatar: req.body.avatar
+    }
+    
     let lesson = {
-            speaker: speaker.ops[0]._id,
-            lessonSubject: req.query.lessonSubject,
-            location: location,
-            description: req.query.description,
-            synagogueId: req.query.synagogueId,
-            audience: req.query.audience,
+            speakerId: req.body.speakerId,
+            lessonSubject: req.body.lessonSubject,
+            address: req.body.address,
+            location: req.body.location,
+            description: req.body.description,
+            synagogueId: req.body.synagogueId,
+            audience: req.body.audience,
+            date: req.body.date,
+            time: time,
+            timeString: timeString,
             days: days,
-            notes: req.query.notes,
-            comments: req.query.comments,
+            notes: req.body.notes,
+            contact_name: req.body.contact_name,
+            contact_number: req.body.contact_number
     }
 
     // @ts-ignore
@@ -97,29 +131,31 @@ private viewLesson = async (req: Request, res: Response) => {
     let speaker: object;
     let comments: object;
     try {
-        lesson = await this.LessonDB.getById(req.query.id); 
-        
-        
-        lesson["speaker"] = lesson["speaker"].toString(12);
-        
-        speaker = await this.SpeakerDB.getById(lesson["speaker"]);
-        comments = await this.CommentsDB.findByThreadId("lesson_id",req.query.id);
-            console.log(comments);
-            lesson.comments = comments;
-        lesson["speaker"] = {
-            id: speaker["_id"],
-            name:speaker["name"],
-            avatar: speaker["avatar"]
+        lesson = await this.LessonDB.getById(req.query.id);
+        if(lesson.synagogueId != null){
+            let synagogue = await this.SynagoguesDB.getById(lesson.synagogueId.toString(12));
+            lesson.synagogueName = synagogue.name;
         }
-        
+        let speakerId = lesson["speakerId"].toString(12);
+        speaker = await this.SpeakerDB.getById(speakerId);
+        comments = await this.CommentsDB.findByThreadId("lesson_id",req.query.id);
+            lesson.comments = comments;
+            lesson["speaker"] = {
+            name:speaker["name"],
+            avatar: speaker["avatar"],
+            about: speaker["about"]
+        }
+        lesson.time = lesson.timeString;
 
         if(lesson == null){
             res.status(400);
-            res.send({message: "Lesson not found"})
+            return res.send({message: "Lesson not found"})
         } 
+
     } catch (e) {
+        console.log(e)
         res.status(400);
-        res.send({message: "Bad request"})
+        return res.send({message: "Bad request"})
     }
    
     res.status(200);
@@ -129,50 +165,64 @@ private viewLesson = async (req: Request, res: Response) => {
 }
 private updateLesson = async (req: Request, res: Response) => {
         let errors = [];
-        if(req.query.speaker == null){
-            errors.push({message: "Missing speaker"})
+        if(req.body.speakerId == null || ObjectID.isValid(req.body.speakerId) == false){
+            errors.push({message: "Missing or incorrect speaker Id"})
         }
-        if(req.query.lessonSubject == null){
+        if(req.body.lessonSubject == null){
             errors.push({message: "Missing address"})
         }
-        if(req.query.location == null){
+        if(req.body.location == null){
             errors.push({message: "Missing location"})
         }
-        if(req.query.days == null){
-            errors.push({message: "Missing Times and Dates"})
+        if(req.body.date == null){
+            if(req.body.days == null){
+                errors.push({message: "Missing Times and Dates"})
+            }
         }
 
-        let location: Location;
-        let days;
-        try {
-            location = JSON.parse(req.query.location);
-        } catch (e) {
-            errors.push({message: "Location must be JSON"})
-        }
-        try {
-            days = JSON.parse(req.query.days);
-        } catch (e) {
-            errors.push({message: "Days must be valid array"})
-        }
-        if(req.query.notes != null && req.query.notes.length > 100){
+        if(req.body.notes != null && req.body.notes.length > 100){
             errors.push({message: "Description cannot exceed 100 characters"})
         }
         if(errors.length > 0){
             res.status(400);
             return res.send(errors)
         }
-        let newLesson = {
-                speaker: req.query.speaker,
-                lessonSubject: req.query.lessonSubject,
-                location: location,
-                description: req.query.description,
-                synagogueId: req.query.synagogueId,
-                days: days,
-                notes: req.query.notes,
-                comments: req.query.comments
 
+        let time;
+        let timeString;
+        let days = [];
+        if(req.body.time){
+            let t = req.body.time.split(':');
+            time = (+t[0]) * 60 * 60 + (+t[1]) * 60;
+        } else if(req.body.date){
+            let d = req.body.date.replace('Z','');
+            time = (+new Date(d).getHours()) * 60 * 60 + (+new Date(d).getMinutes()) * 60;
+        }
+        if(req.body.date != null && req.body.days == null){
+            days.push(new Date(req.body.date.replace('Z','')).getDay());
+        } else {
+            days = req.body.days;
+        }
+        timeString = new Date(time * 1000).toISOString().substr(11, 5);
+
+        let newLesson = {
+            speakerId: req.body.speakerId,
+            lessonSubject: req.body.lessonSubject,
+            address: req.body.address,
+            location: req.body.location,
+            description: req.body.description,
+            synagogueId: req.body.synagogueId,
+            audience: req.body.audience,
+            date: req.body.date,
+            time: time,
+            timeString: timeString,
+            days: days,
+            notes: req.body.notes,
+            contact_name: req.body.contact_name,
+            contact_number: req.body.contact_number,
+            isEvent: req.body.isEvent
         };
-        await this.LessonDB.updateById({id: req.query.id, updateParams: {$set: newLesson}});
+        await this.LessonDB.updateById({id: req.body.id, updateParams: {$set: newLesson}});
         res.status(200);
         res.send({message: "Lesson updated successfully"})
     };
@@ -192,16 +242,16 @@ private updateLesson = async (req: Request, res: Response) => {
 
     private comment = async (req: Request, res: Response) => {
         let errors = [];
-        if(req.query.lesson_id == null){
+        if(req.body.lesson_id == null){
             errors.push({message: "Missing synagogue id"})
         }
-        if(req.query.comment_body == null){
+        if(req.body.comment_body == null){
             errors.push({message: "Missing comment body"})
         }
-        if(req.query.date == null){
+        if(req.body.date == null){
             errors.push({message: "Missing Date"})
         }
-        if(req.query.comment_body != null && req.query.comment_body.length > 1000){
+        if(req.body.comment_body != null && req.body.comment_body.length > 1000){
             errors.push({message: "Cannot exceed 1000 characters"})
         }
 
@@ -210,18 +260,27 @@ private updateLesson = async (req: Request, res: Response) => {
             return res.send(errors)
         }
         // @ts-ignore
-        req.query.user_id = req.user.id;
+        req.body.user_id = req.user.id;
         let comment;
+        let comments;
+        let user;
         try {
-            comment = await this.CommentsDB.create(req.query);   
+            user = await this.UsersDB.getById(req.body.user_id);
+            console.log(user)
+            req.body.first_name = user.first_name;
+            req.body.last_name = user.last_name;
+            req.body.avatar = user.avatar;
+            comment = await this.CommentsDB.create(req.body);
+            comments = await this.CommentsDB.findByThreadId("lesson_id",req.body.lesson_id); 
         } catch (e) {
             res.status(400);
             res.send({message: "Bad request"})
             console.log(e);
         }
 
+        console.log(comment.ops);
         res.status(200);
-        res.send(comment.ops[0]);
+        res.send({comments: comments});
     }
 
     private deleteComment = async (req: Request, res: Response) => {
@@ -251,7 +310,7 @@ private updateLesson = async (req: Request, res: Response) => {
     private like = async (req: Request, res: Response) => {
         try {
             // @ts-ignore
-            await this.LessonDB.like(req.query.lesson_id, req.user.id);
+            await this.LessonDB.like(req.body.lesson_id, req.user.id);
         } catch (e) {
             console.log(e)
             res.status(400);
@@ -265,7 +324,7 @@ private updateLesson = async (req: Request, res: Response) => {
     private unlike = async (req: Request, res: Response) => {
         try {
             // @ts-ignore
-            await this.LessonDB.unlike(req.query.lesson_id, req.user.id);
+            await this.LessonDB.unlike(req.body.lesson_id, req.user.id);
         } catch (e) {
             console.log(e)
             res.status(400);
@@ -279,7 +338,7 @@ private updateLesson = async (req: Request, res: Response) => {
     private favorite = async (req: Request, res: Response) => {
         try {
             // @ts-ignore
-            await this.UsersDB.favorite(req.query.lesson_id, req.user.id, 'lesson');
+            await this.UsersDB.favorite(req.body.lesson_id, req.user.id, 'lesson');
         } catch (e) {
             console.log(e)
             res.status(400);
@@ -293,7 +352,7 @@ private updateLesson = async (req: Request, res: Response) => {
     private unfavorite = async (req: Request, res: Response) => {
         try {
             // @ts-ignore
-            await this.UsersDB.unfavorite(req.query.lesson_id, req.user.id, 'lesson');
+            await this.UsersDB.unfavorite(req.body.lesson_id, req.user.id, 'lesson');
         } catch (e) {
             console.log(e)
             res.status(400);
@@ -322,8 +381,8 @@ private updateLesson = async (req: Request, res: Response) => {
         let speakers;
         try {
             speakers = await this.SpeakerDB.getAll();
-                        
         } catch (e) {
+            console.log(e)
             res.status(400);
             res.send({message: "Bad request"})
         }

@@ -11,7 +11,7 @@ export interface User {
     fb_id: string,
     g_id: string
     cityName: string,
-    Location: Location,
+    location: Location,
     favorites: Favorite[],
     favorites_count: number,
     searchHistory: SearchQuery[]

@@ -5,6 +5,7 @@ export interface SearchQuery {
     startTime: string,
     endTime: string,
     sortBy: string,
+    today: number,
     //mikve?: boolean,
     //parking?: boolean,
     //disabled_access?: boolean,

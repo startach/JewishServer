@@ -28,6 +28,7 @@ export class SynagoguesDB extends MongoDB<Synagogue> {
     }
 
     public search = async (query: SearchQuery) => {
+        // @ts-ignore
         const innerQuery: InnerQuery = {};
         let sort: object;
 
@@ -35,11 +36,16 @@ export class SynagoguesDB extends MongoDB<Synagogue> {
             innerQuery.name = { "$regex": ".*" + query.name + ".*", "$options": 'i'};
         }
 
-        if(!!query.shtiblach && query.shtiblach == true){
-            innerQuery["externals.shtiblach"] = true;
-        } else if(!!query.startTime && !!query.endTime){
-            innerQuery["minyans.time"] = { "$gte": query.startTime };
-            innerQuery["minyans.time"] = { "$lte": query.endTime };
+        innerQuery["$or"] = [{"shtiblach":true}];
+
+        if(!!query.startTime && !!query.endTime){
+            let start:any = query.startTime.split(':');
+            start = (+start[0]) * 60 * 60 + (+start[1]) * 60;
+            let end:any = query.endTime.split(':');
+            end = (+end[0]) * 60 * 60 + (+end[1]) * 60;
+            
+            innerQuery["$or"].push({"minyans.time": { "$lte": end, "$gte": start }});
+            innerQuery["minyans.days"] = query.today;
         }
 
         if(!!query.sortBy){

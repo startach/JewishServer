@@ -1,6 +1,6 @@
+import { Lesson } from "../model/Lesson";
 import { SearchQuery } from "../model/SearchQuery";
 import { InnerQuery } from "../model/InnerQuery";
-import { Lesson } from "../model/Lesson";
 import { MongoDB } from "./MongoDB";
 import { ObjectID } from "bson";
 
@@ -23,29 +23,48 @@ export class LessonsDB extends MongoDB<Lesson> {
         );
     }
 
-    public search = async (query: SearchQuery) => {
-        const innerQuery: InnerQuery = {};
+    public getLessonsByLocation = async (query) => {
+        // @ts-ignore
+        var innerQuery: InnerQuery = {};
 
-        if (!!query.name)
-            innerQuery.name = { "$regex": ".*" + query.name + ".*" };
-        if (!!query.address)
-            innerQuery.address = { "$regex": ".*" + query.address + ".*" };
-        if (!!query.days)
-            innerQuery["minyans.days"] = { "$all": query.days };
-        if (!!query.hours) {
-            if (query.hours.length > 0)
-                innerQuery["minyans.startTime"] = { "$gte": query.hours[0] };
-            if (query.hours.length > 1)
-                innerQuery["minyans.endTime"] = { "$lte": query.hours[1] };
-        }
-        if (!!query.mikve)
-            innerQuery["externals.mikve"] = query.mikve;
-        if (!!query.parking)
-            innerQuery["externals.parking"] = query.parking;
-        if (!!query.disabled_access)
-            innerQuery["externals.disabled_access"] = query.disabled_access;
-        if (!!query.shtiblach)
-            innerQuery["externals.shtiblach"] = query.shtiblach;
+        if (!!query.lat && !!query.lon)
+            innerQuery.location = {
+                $near: {
+                    $geometry: {
+                        type: "Point",
+                        coordinates: [
+                            query.lon,
+                            query.lat
+                        ]
+                    },
+                    $minDistance: 0,
+                    $maxDistance: 10000,
+                }
+            };
+
+        if (Object.keys(innerQuery).some(key => !innerQuery[key]))
+            return { success: false, message: "No valid query received" };
+            
+        return await this.DB
+            .find(innerQuery)
+            .limit(query.limit)
+            .toArray();
+    }
+    public getTodayLessons = async (query) => {
+        return await this.DB.find({days: query.today}).limit(query.limit).toArray();
+    }
+
+    public getRecentLessons = async (query) => {
+        return await this.DB.find({}).sort({_id:-1}).limit(query.limit).toArray();
+    }
+
+    public getPopularLessons = async (query) => {
+        return await this.DB.find({}).sort({likes_count:-1}).limit(query.limit).toArray();
+    }
+
+    public search = async (query: SearchQuery) => {
+        //@ts-ignore
+        const innerQuery: InnerQuery = {};
 
         if (!!query.lat && !!query.lon && !!query.min_radius && !!query.max_radius)
             innerQuery.location = {

@@ -3,51 +3,101 @@ import { Response, Request } from "express";
 import { SynagoguesDB } from "../dal/SynagoguesDB";
 import { LessonsDB } from "../dal/LessonsDB";
 import { UsersDB } from "../dal/UsersDB";
+import { SpeakerDB } from "../dal/SpeakerDB";
+import * as passport from "passport";
+const tzlookup = require("tz-lookup");
 
 export class SearchRouter {
     public router = express.Router();
     public SynagogueDB: SynagoguesDB;
     public LessonsDB: LessonsDB;
     public UsersDB: UsersDB;
-    // public defaultFilters = {
-    //     sortBy: 'nearby',
-    //     timeRange: {
-    //         min: '00:00',
-    //         max: '23:59'
-    //     },
-    //     radius: 1, // km
-    //     type: 'speaker'
-    // }
+    public SpeakerDB: SpeakerDB;
+
     constructor() {
         this.UsersDB = new UsersDB();
         this.SynagogueDB = new SynagoguesDB();
         this.LessonsDB = new LessonsDB();
-        this.router.get('/', this.viewSearch);
-        this.router.post('/synagogues', this.searchSynagogues);
-        this.router.get('/autocomplete/synagogues', this.synagoguesAutocomplete);
+        this.SpeakerDB = new SpeakerDB();
+        this.router.get('/', passport.authenticate('jwt', { session: false }), this.viewSearch);
+        this.router.delete('/delete', passport.authenticate('jwt', { session: false }), this.deleteSearch);
+        this.router.post('/synagogues', passport.authenticate('jwt', { session: false }), this.searchSynagogues);
+        this.router.get('/autocomplete/synagogues', passport.authenticate('jwt', { session: false }), this.synagoguesAutocomplete);
+        this.router.post('/speakers', passport.authenticate('jwt', { session: false }), this.searchSpeakers);
+        this.router.get('/autocomplete/speakers', passport.authenticate('jwt', { session: false }), this.speakersAutocomplete);
     }
 
     private viewSearch = async (req: Request, res: Response) => {
         // @ts-ignore
         let user = await this.UsersDB.getById(req.user.id);
-        let searchHistory = user.searchHistory;
+        let searchHistory = user.searchHistory || [];
         res.status(200);
         res.send(searchHistory);
     };
 
-    private searchSynagogues = async (req: Request, res: Response) => {
-        req.query.lon = JSON.parse(req.query.lon)
-        req.query.lat = JSON.parse(req.query.lat)
+    private deleteSearch = async (req: Request, res: Response) => {
+        // @ts-ignore
+        await this.UsersDB.updateById({id: req.user.id, updateParams: {$set: {"searchHistory": []}}});
+        res.status(200);
+        res.send({message: "Search history deleted successfully."});
+    };
 
-        let result = await this.SynagogueDB.search(req.query);
+    private searchSynagogues = async (req: Request, res: Response) => {
+        // @ts-ignore
+        let user = await this.UsersDB.getById(req.user.id);
+        let today = new Date().getDay();
+        // using user loc for correct day
+        if(user.location != null){
+            try {
+                let timezone = tzlookup(user.location.coordinates[1], user.location.coordinates[0])
+                today = new Date(new Date().toLocaleString("en-US", {timeZone: timezone})).getDay();   
+            } catch (e) {
+                console.log(e)
+            }
+        }
+
+        req.body.today = today;
+        req.body.lon = JSON.parse(req.body.lon)
+        req.body.lat = JSON.parse(req.body.lat)
+
+        
+
+        let result = await this.SynagogueDB.search(req.body);
         res.status(200);
         res.send(result);
+        req.body.date = new Date();
+        delete(req.body.today);
+        // @ts-ignore
+        await this.UsersDB.updateById({id: req.user.id, updateParams: {$push: {"searchHistory": req.body}}});
     };
 
     private synagoguesAutocomplete = async (req: Request, res: Response) => {
         let synagogues = await this.SynagogueDB.autocomplete(req.query.name);
         console.log(synagogues)
         res.status(200);
-        res.send(synagogues);
+        // @ts-ignore
+        res.send(synagogues.map((s)=> { return {_id: s._id, name: s.name, address: s.address, location: s.location }}));
     }
+
+    private searchSpeakers = async (req: Request, res: Response) => {
+        let result;
+                 
+        if(req.body.name != null){
+            result = await this.SpeakerDB.search(req.body.name);
+        }
+        else if(req.body.lon != null && req.body.lat != null){
+            req.body.lon = JSON.parse(req.body.lon)
+            req.body.lat = JSON.parse(req.body.lat)
+            result = await this.LessonsDB.search(req.body);
+        }
+        res.status(200);
+        res.send(result);
+    };
+
+    private speakersAutocomplete = async (req: Request, res: Response) => {
+        let speakers = await this.SpeakerDB.autocomplete(req.query.name);
+        console.log(speakers)
+        res.status(200);
+        res.send(speakers);
+    };
 }
