@@ -1,6 +1,6 @@
 import { Lesson } from "../model/Lesson";
-import { SearchQuery } from "../model/SearchQuery";
-import { InnerQuery } from "../model/InnerQuery";
+import { SearchQuery } from "../model/searchQuery";
+import { InnerQuery } from "../model/innerQuery";
 import { MongoDB } from "./MongoDB";
 import { ObjectID } from "bson";
 

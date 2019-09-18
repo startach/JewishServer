@@ -1,7 +1,7 @@
 import { MongoDB } from "./MongoDB";
 import { Speaker } from "../model/Speaker";
-import { SearchQuery } from "../model/SearchQuery";
-import { InnerQuery } from "../model/InnerQuery";
+import { SearchQuery } from "../model/searchQuery";
+import { InnerQuery } from "../model/innerQuery";
 
 
 export class SpeakerDB extends MongoDB<Speaker> {

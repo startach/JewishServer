@@ -45,6 +45,7 @@ export class AuthRouter extends BaseRouter<User> {
     }
 
     private googleTokenAuth = async (req, res) => {
+        console.log(req)
         let user = {
             g_id: req.user._json.id,
             first_name: req.user._json.given_name,
