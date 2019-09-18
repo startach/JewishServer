@@ -1,7 +1,7 @@
 import { ObjectId } from "bson";
 import { Location } from "./Location";
 import { Favorite } from "./Favorite";
-import { SearchQuery } from "./searchQuery";
+import { SearchQuery } from "./SearchQuery";
 
 export interface User {
     _id: ObjectId;
