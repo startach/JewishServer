@@ -3,7 +3,7 @@ import { Response, Request } from "express";
 import * as passport from "passport";
 import { BaseRouter } from "./BaseRouter";
 import { User } from "../model/User";
-import { UsersDB } from "../dal/usersDB";
+import { UsersDB } from "../dal/UsersDB";
 
 export class UsersRouter extends BaseRouter<User> {
     public router = express.Router();

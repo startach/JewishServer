@@ -8,6 +8,7 @@ COPY package.json package.json
 RUN npm install
 
 COPY . .
+RUN npm config set production false
 RUN npm run build
 
 CMD ["node", "dist/"]

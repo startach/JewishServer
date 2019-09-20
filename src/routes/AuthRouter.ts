@@ -4,7 +4,7 @@ import * as passport from "passport";
 import * as jwt from 'jsonwebtoken';
 import { BaseRouter } from "./BaseRouter";
 import { User } from "../model/User";
-import { UsersDB } from "../dal/usersDB";
+import { UsersDB } from "../dal/UsersDB";
 
 export class AuthRouter extends BaseRouter<User> {
     public router = express.Router();

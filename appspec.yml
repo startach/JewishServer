@@ -1,5 +1,8 @@
 version: 0.0
 os: linux
+files:
+  - source: /
+    destination: /tmp/jewish-server
 hooks:
   ApplicationStop:
     - location: scripts/kill_container.sh

@@ -25,3 +25,5 @@ Headers:
   content-type: application/json
 Body: {"lat": 30.987804, "lon": 34.929741000000035, "min_radius": 1, "max_radius": 2}
 ```
+
+https://stackoverflow.com/questions/35758584/cannot-redeclare-block-scoped-variable-typescript
