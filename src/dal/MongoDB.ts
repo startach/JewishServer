@@ -1,8 +1,7 @@
 import { ObjectID } from "bson";
 import { MongoClient, Collection } from "mongodb";
 
-//const connectionUrl = "mongodb://startach:gG123456@ds235022.mlab.com:35022/jewish_world";
-const connectionUrl = "mongodb://localhost:27017/jewish_world";
+const connectionUrl = "mongodb://startach:gG123456@ds235022.mlab.com:35022/jewish_world";
 
 export class MongoDB<T> {
     protected DB: Collection<T>;
