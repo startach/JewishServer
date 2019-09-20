@@ -1,18 +1,15 @@
 version: 0.0
 os: linux
-files:
-  - source: docker/middleman_docker_image.tar.gz
-    destination: /tmp
 hooks:
   ApplicationStop:
     - location: scripts/kill_container.sh
       timeout: 20
-      runas: ec2-user
+      runas: ubuntu
   AfterInstall:
     - location: scripts/build_image.sh
       timeout: 10
-      runas: ec2-user
+      runas: ubuntu
   ApplicationStart:
     - location: scripts/start_container.sh
       timeout: 10
-      runas: ec2-user
+      runas: ubuntu
