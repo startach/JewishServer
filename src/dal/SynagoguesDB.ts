@@ -24,7 +24,7 @@ export class SynagoguesDB extends MongoDB<Synagogue> {
     }
 
     public autocomplete = async (name: string) => {
-        return await this.DB.find({name: {"$regex":".*" + name + ".*", "$options": 'i'}}).toArray();
+        return await this.DB.find({name: {"$regex":".*" + name + ".*", "$options": 'i'}}).project({_id: 1, name: 1, address: 1, location: 1}).toArray();
     }
 
     public search = async (query: SearchQuery) => {
@@ -76,5 +76,9 @@ export class SynagoguesDB extends MongoDB<Synagogue> {
             .find(innerQuery, sort)
             .limit(20)
             .toArray();
+    }
+
+    public addressAutocomplete = async (address: string) => {
+        return await this.DB.find({address: {"$regex":".*" + address + ".*", "$options": 'i'}}).project({_id: 1, name: 1, address: 1, location: 1}).toArray();
     }
 }

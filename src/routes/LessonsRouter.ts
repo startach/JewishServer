@@ -266,19 +266,16 @@ private updateLesson = async (req: Request, res: Response) => {
         let user;
         try {
             user = await this.UsersDB.getById(req.body.user_id);
-            console.log(user)
             req.body.first_name = user.first_name;
             req.body.last_name = user.last_name;
             req.body.avatar = user.avatar;
             comment = await this.CommentsDB.create(req.body);
-            comments = await this.CommentsDB.findByThreadId("lesson_id",req.body.lesson_id); 
+            comments = await this.CommentsDB.findByThreadId("lesson_id", req.body.lesson_id); 
         } catch (e) {
             res.status(400);
-            res.send({message: "Bad request"})
-            console.log(e);
+            res.send({message: "Bad request"});
         }
 
-        console.log(comment.ops);
         res.status(200);
         res.send({comments: comments});
     }

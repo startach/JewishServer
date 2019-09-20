@@ -232,15 +232,22 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
         // @ts-ignore
         req.body.user_id = req.user.id;
         let comment;
+        let comments;
+        let user;
         try {
-            comment = await this.CommentsDB.create(req.body);   
+            user = await this.UsersDB.getById(req.body.user_id);
+            req.body.first_name = user.first_name;
+            req.body.last_name = user.last_name;
+            req.body.avatar = user.avatar;
+            comment = await this.CommentsDB.create(req.body);
+            comments = await this.CommentsDB.findByThreadId("synagogue_id", req.body.synagogue_id); 
         } catch (e) {
             res.status(400);
             res.send({message: "Bad request"})
         }
 
         res.status(200);
-        res.send(comment.ops[0]);
+        res.send({comments: comments});
     }
 
     private deleteComment = async (req: Request, res: Response) => {

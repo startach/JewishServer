@@ -25,6 +25,8 @@ export class SearchRouter {
         this.router.get('/autocomplete/synagogues', passport.authenticate('jwt', { session: false }), this.synagoguesAutocomplete);
         this.router.post('/speakers', passport.authenticate('jwt', { session: false }), this.searchSpeakers);
         this.router.get('/autocomplete/speakers', passport.authenticate('jwt', { session: false }), this.speakersAutocomplete);
+        this.router.get('/autocomplete/lessonLocation', passport.authenticate('jwt', { session: false }), this.lessonLocationAutocomplete);
+        this.router.get('/autocomplete/synagogueLocation', passport.authenticate('jwt', { session: false }), this.synagogueLocationAutocomplete);
     }
 
     private viewSearch = async (req: Request, res: Response) => {
@@ -99,5 +101,18 @@ export class SearchRouter {
         console.log(speakers)
         res.status(200);
         res.send(speakers);
+    };
+
+    private lessonLocationAutocomplete = async (req: Request, res: Response) => {
+        let lessons = await this.LessonsDB.autocomplete(req.query.address);
+        console.log(lessons.length)
+        res.status(200);
+        res.send(lessons);
+    };
+
+    private synagogueLocationAutocomplete = async (req: Request, res: Response) => {
+        let synagogues = await this.SynagogueDB.addressAutocomplete(req.query.address);
+        res.status(200);
+        res.send(synagogues);
     };
 }

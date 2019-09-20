@@ -50,6 +50,7 @@ export class LessonsDB extends MongoDB<Lesson> {
             .limit(query.limit)
             .toArray();
     }
+   
     public getTodayLessons = async (query) => {
         return await this.DB.find({days: query.today}).limit(query.limit).toArray();
     }
@@ -88,5 +89,9 @@ export class LessonsDB extends MongoDB<Lesson> {
             .find(innerQuery)
             .limit(20)
             .toArray();
+    }
+    
+    public autocomplete = async (address: string) => {
+        return await this.DB.find({address: {"$regex":".*" + address + ".*", "$options": 'i'}}).project({_id: 1, address: 1, location: 1}).toArray();
     }
 }

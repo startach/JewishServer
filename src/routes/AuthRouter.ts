@@ -14,7 +14,7 @@ export class AuthRouter extends BaseRouter<User> {
     constructor() {
         super(new UsersDB());
         this.router.post("/facebook/token", passport.authenticate('facebook-token', {session: false}), this.facebookTokenAuth);
-        this.router.post("/google/token", passport.authenticate('google-token', {session: false}), this.googleTokenAuth);
+        this.router.post("/google", passport.authenticate('google-id-token', {session: false}), this.googleTokenAuth);
     }
 
     private facebookTokenAuth = async (req, res) => {
@@ -45,13 +45,12 @@ export class AuthRouter extends BaseRouter<User> {
     }
 
     private googleTokenAuth = async (req, res) => {
-        console.log(req)
         let user = {
-            g_id: req.user._json.id,
-            first_name: req.user._json.given_name,
-            last_name: req.user._json.family_name,
-            email: req.user._json.email,
-            avatar: req.user._json.picture
+            g_id: req.user.sub,
+            first_name: req.user.given_name,
+            last_name: req.user.family_name,
+            email: req.user.email,
+            avatar: req.user.picture
         };
         const result = await this.UserDB.findByEmail(user.email);
         

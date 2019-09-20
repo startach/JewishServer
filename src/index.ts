@@ -15,7 +15,7 @@ import * as i18n from 'i18n';
 import * as path from "path";
 
 const FacebookTokenStrategy = require('passport-facebook-token');
-const GoogleTokenStrategy = require('passport-google-token').Strategy;
+const GoogleTokenStrategy = require('passport-google-id-token'); //GoogleTokenStrategy = require('passport-google-token').Strategy;
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
 require('dotenv').config();
@@ -72,10 +72,10 @@ passport.use(new FacebookTokenStrategy({
 
 passport.use(new GoogleTokenStrategy({
   clientID: GOOGLE_CLIENT_ID,
-  clientSecret: GOOGLE_CLIENT_SECRET
+  //clientSecret: GOOGLE_CLIENT_SECRET
 },
-function(accessToken, refreshToken, profile, done) {
-  done(null, profile);
+function(parsedToken, googleId, done) {
+  done(null, parsedToken.payload);
 }
 ));
 
