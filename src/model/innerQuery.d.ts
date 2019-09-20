@@ -1,9 +1,9 @@
 export interface InnerQuery {
     name?: { [regex: string]: string },
     address?: { [regex: string]: string },
-    "minyans.days"?: { [regex: string]: number[] },
-    "minyans.startTime"?: { [regex: string]: number },
-    "minyans.endTime"?: { [regex: string]: number },
+    "minyans.startTime"?: { [regex: string]: string },
+    "minyans.endTime"?: { [regex: string]: string },
+    "minyans.days": number,
     "externals.mikve"?: boolean,
     "externals.parking"?: boolean,
     "externals.disabled_access"?: boolean,

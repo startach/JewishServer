@@ -1,7 +1,10 @@
 export interface Minyan {
     minyan: string;
+    timeType: string; // exact or relative
     days: number[];
-    startTime: number;
-    endTime?: number;
-    lastVerified: string;
+    time: number;
+    timeString: string;
+    offset: number; // minutes
+    sun_position: string; // sunset or sunrise
+    lastVerified: Date;
 }

@@ -13,10 +13,10 @@ export class BaseRouter<T> {
     }
 
     private intializeRoutes() {
-        this.router.get("/:id", this.getById);
-        this.router.post("/", this.create);
-        this.router.put("/:id", this.update);
-        this.router.delete("/:id", this.delete);
+        //this.router.get("/:id", this.getById);
+        //this.router.post("/", this.create);
+        //this.router.put("/:id", this.update);
+        //this.router.delete("/:id", this.delete);
     }
 
     private getById = async (req: Request, res: Response) => {

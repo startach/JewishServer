@@ -1,13 +1,18 @@
 import { ObjectID } from "bson";
 import { MongoClient, Collection } from "mongodb";
 
-const connectionUrl = "mongodb://startach:gG123456@ds235022.mlab.com:35022/jewish_world";
+//const connectionUrl = "mongodb://startach:gG123456@ds235022.mlab.com:35022/jewish_world";
+const connectionUrl = "mongodb://localhost:27017/jewish_world";
 
 export class MongoDB<T> {
     protected DB: Collection<T>;
 
     constructor(collentionName: string) {
         this.initializeDB(collentionName);
+    }
+
+    public getAll = async () => {
+        return await this.DB.find({}).toArray();
     }
 
     public getById = async (id: string) => {
@@ -18,12 +23,16 @@ export class MongoDB<T> {
         return await this.DB.insertOne(model);
     }
 
-    public updateById = async ({ id, updateParams }: { id: string, updateParams: JSON }) => {
+    public updateById = async ({ id, updateParams }: { id: string, updateParams: object }) => {
         return await this.DB.updateOne({ "_id": ObjectID.createFromHexString(id) }, updateParams);
     }
 
     public deleteById = async (id: string) => {
         return await this.DB.deleteOne({ "_id": ObjectID.createFromHexString(id) });
+    }
+
+    public bulkWrite = async (operations: object[]) => {
+        return await this.DB.bulkWrite(operations);
     }
 
     private initializeDB = async (collectionName: string) => {
