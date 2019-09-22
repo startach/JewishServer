@@ -11,6 +11,7 @@ export class SplashRouter extends BaseRouter<AppData> {
     constructor() {
         super(new AppDataDB());
         this.router.get("/memorialText", this.memorialText);
+        this.router.get("/test", (req, res)=> {res.send("testing deployment")});
     }
 
     private memorialText = async (req: Request, res: Response) => {
