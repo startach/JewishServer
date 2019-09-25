@@ -138,11 +138,6 @@ private addSpeaker = async (req: Request, res: Response) => {
         return res.send(errors)
     }
 
-
-    req.body.speaker = {
-            name: req.body.speaker,
-            avatar: req.body.avatar
-    }
     
     let speaker = {
             name: req.body.name,
@@ -151,9 +146,17 @@ private addSpeaker = async (req: Request, res: Response) => {
     }
 
     // @ts-ignore
-    let newSpeaker = await this.SpeakerDB.create(speaker);
+    await this.SpeakerDB.create(speaker);
+    let speakers;
+        try {
+            speakers = await this.SpeakerDB.getAll();
+        } catch (e) {
+            console.log(e)
+            res.status(400);
+            res.send({message: "Bad request"})
+        }
     res.status(200);
-    res.send({id: newSpeaker.ops[0]._id, message: "Speaker added successfully"})
+    res.send({speakers: speakers})
 }
 
 
