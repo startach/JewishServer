@@ -25,6 +25,7 @@ export class LessonsRouter extends BaseRouter<Lesson>{
         this.SynagoguesDB = new SynagoguesDB();
         this.router.get('/audience',passport.authenticate('jwt', { session: false }), this.getAudience);
         this.router.post('/add',passport.authenticate('jwt', { session: false }), this.addLesson);
+        this.router.post('/addSpeaker',passport.authenticate('jwt', { session: false }), this.addSpeaker);
         this.router.get('/view', passport.authenticate('jwt', { session: false }), this.viewLesson);
         this.router.get('/speakers', passport.authenticate('jwt', { session: false }), this.getSpeakers);
         this.router.put('/update', passport.authenticate('jwt', { session: false }), this.updateLesson);
@@ -123,6 +124,36 @@ private addLesson = async (req: Request, res: Response) => {
     let newLesson = await this.LessonDB.create(lesson);
     res.status(200);
     res.send({id: newLesson.ops[0]._id, message: "Lesson added successfully"})
+}
+
+private addSpeaker = async (req: Request, res: Response) => {
+    let errors = [];
+    
+    if(req.body.name == null){
+        errors.push({message: "Missing name"})
+    }
+
+    if(errors.length > 0){
+        res.status(400);
+        return res.send(errors)
+    }
+
+
+    req.body.speaker = {
+            name: req.body.speaker,
+            avatar: req.body.avatar
+    }
+    
+    let speaker = {
+            name: req.body.name,
+            avatar: req.body.avatar,
+            about: req.body.about
+    }
+
+    // @ts-ignore
+    let newSpeaker = await this.SpeakerDB.create(speaker);
+    res.status(200);
+    res.send({id: newSpeaker.ops[0]._id, message: "Speaker added successfully"})
 }
 
 
