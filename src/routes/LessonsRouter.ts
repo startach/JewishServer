@@ -173,12 +173,8 @@ private viewLesson = async (req: Request, res: Response) => {
         let speakerId = lesson["speakerId"].toString(12);
         speaker = await this.SpeakerDB.getById(speakerId);
         comments = await this.CommentsDB.findByThreadId("lesson_id",req.query.id);
-            lesson.comments = comments;
-            lesson["speaker"] = {
-            name:speaker["name"],
-            avatar: speaker["avatar"],
-            about: speaker["about"]
-        }
+        lesson.comments = comments;
+        lesson["speaker"] = speaker;
         lesson.time = lesson.timeString;
 
         if(lesson == null){
