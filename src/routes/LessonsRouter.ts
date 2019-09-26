@@ -166,7 +166,7 @@ private viewLesson = async (req: Request, res: Response) => {
     let comments: object;
     try {
         lesson = await this.LessonDB.getById(req.query.id);
-        if(lesson.synagogueId != null){
+        if(lesson.synagogueId != null && ObjectID.isValid(lesson.synagogueId) == true){
             let synagogue = await this.SynagoguesDB.getById(lesson.synagogueId.toString(12));
             lesson.synagogueName = synagogue.name;
         }
