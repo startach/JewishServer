@@ -109,20 +109,25 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
         let lessons: object;
         try {
             synagogue = await this.SynagogueDB.getById(req.query.id);
+            if(synagogue == null){
+                res.status(400);
+                return res.send({message: "Synagogue not found"})
+            }
             comments = await this.CommentsDB.findByThreadId("synagogue_id", req.query.id);
             lessons = await this.LessonsDB.getById(req.query.id);
             console.log(comments);
             synagogue.comments = comments;
             synagogue.lessons = lessons;
-            if(synagogue == null){
-                res.status(400);
-                res.send({message: "Synagogue not found"})
-            }
             synagogue.minyans.forEach(async (minyan) => { 
                 if(minyan.timeType == 'relative'){
                     await this.setMinyanTime(minyan, synagogue.location);
                 }
              })
+
+             if(!synagogue.likes){
+                 synagogue.likes = []
+                 synagogue.likes_count = 0
+             }
         } catch (e) {
             console.log(e)
             res.status(400);

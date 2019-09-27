@@ -166,6 +166,10 @@ private viewLesson = async (req: Request, res: Response) => {
     let comments: object;
     try {
         lesson = await this.LessonDB.getById(req.query.id);
+        if(lesson == null){
+            res.status(400);
+            return res.send({message: "Lesson not found"})
+        }
         if(lesson.synagogueId != null && ObjectID.isValid(lesson.synagogueId) == true){
             let synagogue = await this.SynagoguesDB.getById(lesson.synagogueId.toString(12));
             lesson.synagogueName = synagogue.name;
@@ -176,11 +180,10 @@ private viewLesson = async (req: Request, res: Response) => {
         lesson.comments = comments;
         lesson["speaker"] = speaker;
         lesson.time = lesson.timeString;
-
-        if(lesson == null){
-            res.status(400);
-            return res.send({message: "Lesson not found"})
-        } 
+        if(!lesson.likes){
+            lesson.likes = []
+            lesson.likes_count = 0
+        }
 
     } catch (e) {
         console.log(e)
