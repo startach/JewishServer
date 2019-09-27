@@ -312,10 +312,21 @@ private updateLesson = async (req: Request, res: Response) => {
 
     private deleteComment = async (req: Request, res: Response) => {
         let errors = [];
-        let comment = await this.CommentsDB.getById(req.query.id);
-        // @ts-ignore
-        if(comment.user_id != req.user.id){
-            errors.push({message: "Comment cannot be deleted."})
+        let comment;
+        try {
+            comment = await this.CommentsDB.getById(req.query.id);
+            if(comment == null){
+                errors.push({message: "Comment doesn't exist."})
+            }
+            // @ts-ignore
+            if(comment.user_id != req.user.id){
+                errors.push({message: "Comment cannot be deleted."})
+                res.status(400);
+                return res.send(errors)
+            }   
+        } catch (error) {
+            res.status(400);
+            return res.send({message: "Bad request"});
         }
 
         if(errors.length > 0){
