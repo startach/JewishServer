@@ -1,5 +1,5 @@
 import * as bodyParser from 'body-parser';
-import * as express from 'express';
+import express from 'express';
 import { SynagoguesRouter } from "./routes/SynagoguesRouter";
 import { LessonsRouter } from "./routes/LessonsRouter";
 import { AuthRouter } from './routes/AuthRouter';
@@ -38,13 +38,6 @@ i18n.configure({
 });
 
 app.set('i18n', i18n);
-
-app.use(passport.initialize());
-
-//swagger
-app.use('/api-docs/swagger', express.static('swagger'));
-app.use('/api-docs/swagger/assets', express.static('node_modules/swagger-ui-dist'));
-
 app.use(bodyParser.json());
 // app.use(swagger.express(
 //   {
@@ -80,7 +73,7 @@ function(parsedToken, googleId, done) {
 }
 ));
 
-app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
 
 app.use((err, req, res, next) => {
   //catch incorrect json err
