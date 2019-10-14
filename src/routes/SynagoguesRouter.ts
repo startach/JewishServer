@@ -25,7 +25,7 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
         this.router.post('/add', passport.authenticate('jwt', { session: false }), this.addSynagogue);
         this.router.get('/view', passport.authenticate('jwt', { session: false }), this.viewSynagogue);
         this.router.put('/update', passport.authenticate('jwt', { session: false }), this.updateSynagogue);
-        //this.router.delete('/delete', passport.authenticate('jwt', { session: false }), this.deleteSynagogue);
+        this.router.delete('/delete', passport.authenticate('jwt', { session: false }), this.deleteSynagogue);
         this.router.post('/comment', passport.authenticate('jwt', { session: false }), this.comment);
         this.router.delete('/deleteComment', passport.authenticate('jwt', { session: false }), this.deleteComment);
         this.router.post('/like', passport.authenticate('jwt', { session: false }), this.like);

@@ -49,7 +49,7 @@ export class SearchRouter {
         let user = await this.UsersDB.getById(req.user.id);
         let today = new Date().getDay();
         // using user loc for correct day
-        if(user.location != null){
+        if(user != undefined && user.location != null){
             try {
                 let timezone = tzlookup(user.location.coordinates[1], user.location.coordinates[0])
                 today = new Date(new Date().toLocaleString("en-US", {timeZone: timezone})).getDay();   
@@ -68,6 +68,7 @@ export class SearchRouter {
         res.status(200);
         res.send(result);
         req.body.date = new Date();
+        req.body.type = 'synagogue';
         delete(req.body.today);
         // @ts-ignore
         await this.UsersDB.updateById({id: req.user.id, updateParams: {$push: {"searchHistory": req.body}}});
@@ -94,6 +95,10 @@ export class SearchRouter {
         }
         res.status(200);
         res.send(result);
+        req.body.date = new Date();
+        req.body.type = 'lesson';
+        // @ts-ignore
+        await this.UsersDB.updateById({id: req.user.id, updateParams: {$push: {"searchHistory": req.body}}});
     };
 
     private speakersAutocomplete = async (req: Request, res: Response) => {
