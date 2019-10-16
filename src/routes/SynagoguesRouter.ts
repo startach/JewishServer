@@ -95,6 +95,7 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
             lessons: req.body.lessons,
             donation_link: req.body.donation_link,
             notes: req.body.notes,
+            last_updated: new Date()
         };
         // @ts-ignore
         let newSynagogue = await this.SynagogueDB.create(synagogue);
@@ -180,7 +181,9 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
             comments: req.body.comments,
             image: req.body.image,
             lessons: req.body.lessons,
-            donation_link: req.body.donation_link
+            donation_link: req.body.donation_link,
+            notes: req.body.notes,
+            last_updated: new Date()
         };
 
         let synagogue;

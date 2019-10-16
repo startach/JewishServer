@@ -23,4 +23,5 @@ export interface Synagogue {
     notes: string;
     likes: Like[];
     likes_count: number;
+    last_updated: Date;
 }
