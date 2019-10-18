@@ -10,6 +10,10 @@ export class MongoDB<T> {
         this.initializeDB(collentionName);
     }
 
+    public find = async (query) => {
+        return await this.DB.find(query).toArray();
+    }
+
     public getAll = async () => {
         return await this.DB.find({}).toArray();
     }

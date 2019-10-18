@@ -84,9 +84,14 @@ export class SearchRouter {
 
     private searchSpeakers = async (req: Request, res: Response) => {
         let result;
+        let speakers;
                  
         if(req.body.name != null){
-            result = await this.SpeakerDB.search(req.body.name);
+            speakers = await this.SpeakerDB.search(req.body.name);
+            let ids = speakers.map((s)=>{ return s._id })
+            result = await this.LessonsDB.find({speakerId: {$in: ids}})
+            console.log(result)
+
         }
         else if(req.body.lon != null && req.body.lat != null){
             req.body.lon = JSON.parse(req.body.lon)
