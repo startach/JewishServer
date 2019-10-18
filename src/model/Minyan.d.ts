@@ -7,4 +7,5 @@ export interface Minyan {
     offset: number; // minutes
     sun_position: string; // sunset or sunrise
     lastVerified: Date;
+    notes: string;
 }

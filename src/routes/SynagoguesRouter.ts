@@ -72,7 +72,12 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
                 errors.push({message: "Missing minyans"})
             }
             if(req.body.minyans != null){
-                req.body.minyans.forEach(async (minyan) => { await this.setMinyanTime(minyan, req.body.location); })
+                req.body.minyans.forEach(async (minyan) => {
+                    await this.setMinyanTime(minyan, req.body.location);
+                    if(minyan.notes != null && minyan.notes.length > 1000){
+                        errors.push({message: "Notes cannot exceed 1000 characters"})
+                    }
+                })
             }
         }
 
@@ -166,7 +171,11 @@ export class SynagoguesRouter extends BaseRouter<Synagogue>{
                 errors.push({message: "Missing minyans"})
             }
             if(req.body.minyans != null){
-                req.body.minyans.forEach(async (minyan) => { await this.setMinyanTime(minyan, req.body.location); })
+                req.body.minyans.forEach(async (minyan) => { 
+                    await this.setMinyanTime(minyan, req.body.location);
+                    if(minyan.notes != null && minyan.notes.length > 1000){
+                        errors.push({message: "Notes cannot exceed 1000 characters"})
+                    } })
             }
         }
         
