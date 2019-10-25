@@ -2,6 +2,7 @@ export interface SearchQuery {
     name?: string,
     //address?: string,
     //days?: number[],
+    speakerId?: object,
     startTime: string,
     endTime: string,
     sortBy: string,

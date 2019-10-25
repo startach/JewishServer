@@ -66,6 +66,27 @@ export class LessonsDB extends MongoDB<Lesson> {
     public search = async (query: SearchQuery) => {
         //@ts-ignore
         const innerQuery: InnerQuery = {};
+        let sort: object;
+        let ids;
+
+        // if(!!query.speakerId){
+        //     ids = { $in: query.speakerId }
+        // }
+
+        if(!!query.startTime && !!query.endTime){
+            let start:any = query.startTime.split(':');
+            start = (+start[0]) * 60 * 60 + (+start[1]) * 60;
+            let end:any = query.endTime.split(':');
+            end = (+end[0]) * 60 * 60 + (+end[1]) * 60;
+            
+            innerQuery.time = { "$lte": end, "$gte": start };
+        }
+
+        if(!!query.sortBy){
+            if(query.sortBy == 'time'){
+                sort = {"sort": {"time":1}}
+            }
+        }
 
         if (!!query.lat && !!query.lon && !!query.min_radius && !!query.max_radius)
             innerQuery.location = {
@@ -84,7 +105,10 @@ export class LessonsDB extends MongoDB<Lesson> {
 
         if (Object.keys(innerQuery).some(key => !innerQuery[key]))
             return { success: false, message: "No valid query received" };
-
+        
+        let test = await this.DB.find(innerQuery).explain()
+        console.log(test)
+        //return innerQuery
         return await this.DB
             .find(innerQuery)
             .limit(20)

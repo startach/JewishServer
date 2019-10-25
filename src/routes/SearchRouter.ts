@@ -86,17 +86,20 @@ export class SearchRouter {
         let result;
         let speakers;
                  
-        if(req.body.name != null){
+        if(req.body.name != null && req.body.name != ""){
             speakers = await this.SpeakerDB.search(req.body.name);
-            let ids = speakers.map((s)=>{ return s._id })
-            result = await this.LessonsDB.find({speakerId: {$in: ids}})
-            console.log(result)
+            if(speakers.length > 0){
+                //req.body.speakerId = speakers.map((s)=>{ return s._id })
+            }
+            //result = await this.LessonsDB.find({speakerId: {$in: ids}})
+            //console.log(result)
 
         }
-        else if(req.body.lon != null && req.body.lat != null){
+        if(req.body.lon != null && req.body.lat != null){
             req.body.lon = JSON.parse(req.body.lon)
             req.body.lat = JSON.parse(req.body.lat)
             result = await this.LessonsDB.search(req.body);
+            console.log(result)
         }
         res.status(200);
         res.send(result);
