@@ -10,6 +10,8 @@ import { SearchRouter } from './routes/SearchRouter';
 import * as passport from 'passport';
 import "reflect-metadata";
 import * as swagger from "swagger-express-ts";
+import * as swaggerUi from 'swagger-ui-express';
+const swaggerDocument = require('../swagger.json');
 import { updateMinyan } from './update_minyan';
 import * as i18n from 'i18n';
 import * as path from "path";
@@ -41,24 +43,25 @@ app.set('i18n', i18n);
 app.use(passport.initialize());
 
 //swagger
-app.use('/api-docs/swagger', express.static('swagger'));
-app.use('/api-docs/swagger/assets', express.static('node_modules/swagger-ui-dist'));
+app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+// app.use('/api-docs/swagger', express.static('swagger'));
+// app.use('/api-docs/swagger/assets', express.static('node_modules/swagger-ui-dist'));
 
 app.use(bodyParser.json());
-app.use(swagger.express(
-  {
-    definition: {
-      info: {
-        title: "synagogue rest api",
-        version: "1.0"
-      },
-      externalDocs: {
-        url: "synagogue/"
-      }
-      // Models can be defined here
-    }
-  }
-));
+// app.use(swagger.express(
+//   {
+//     definition: {
+//       info: {
+//         title: "synagogue rest api",
+//         version: "1.0"
+//       },
+//       externalDocs: {
+//         url: "synagogue/"
+//       }
+//       // Models can be defined here
+//     }
+//   }
+// ));
 
 passport.use(new FacebookTokenStrategy({
     clientID: FACEBOOK_APP_ID,
