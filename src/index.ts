@@ -10,8 +10,6 @@ import { SearchRouter } from './routes/SearchRouter';
 import * as passport from 'passport';
 import "reflect-metadata";
 import * as swagger from "swagger-express-ts";
-import * as swaggerUi from 'swagger-ui-express';
-import * as swaggerDocument from '../swagger.json'
 import { updateMinyan } from './update_minyan';
 import * as i18n from 'i18n';
 import * as path from "path";
@@ -80,8 +78,6 @@ function(parsedToken, googleId, done) {
   done(null, parsedToken.payload);
 }
 ));
-
-app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use((err, req, res, next) => {
   //catch incorrect json err
