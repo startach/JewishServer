@@ -52,8 +52,7 @@ export function godavenWorker(){
                 var url = `shuls/${id}/details`;
                 var result = request('GET', BASE_URL + url);
                 var resultObj = JSON.parse(result.getBody());
-                //console.log(resultObj)
-                //synagogue = resultObj;
+
                 var properties = {
                     shtiblach: null,
                     mikve: null,
@@ -163,8 +162,8 @@ export function godavenWorker(){
         
         }
         
-        console.log('?')
+    
         worker.index();         
     })
-console.log('!')
+    
 }
