@@ -7,8 +7,8 @@ const uuid = require('uuid');
 export class AWSRouter {
   public router = express.Router();
   public s3 = new AWS.S3({
-    accessKeyId: process.env.AWS_ACCESS_KEY || 'AKIAVMQNEANEGDQQE3O4',
-    secretAccessKey: process.env.AWS_SECRET_KEY || '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',
+    accessKeyId: process.env.AWS_ACCESS_KEY || 'AKIAVMQNEANENQOQPX6R',
+    secretAccessKey: process.env.AWS_SECRET_KEY || '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',
     signatureVersion: 'v4',
     // region: process.env.AWS_REGION,
   });
