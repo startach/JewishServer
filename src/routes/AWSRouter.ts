@@ -7,10 +7,10 @@ const uuid = require('uuid');
 export class AWSRouter {
   public router = express.Router();
   public s3 = new AWS.S3({
-    accessKeyId: process.env.AWS_ACCESS_KEY,
-    secretAccessKey: process.env.AWS_SECRET_KEY,
+    accessKeyId: 'AKIAVMQNEANENQOQPX6R',
+    secretAccessKey: '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',
     signatureVersion: 'v4',
-    region: process.env.AWS_ACCESS_KEY,
+    region: 'eu-central-1',
   });
   constructor() {
     this.router.get(
